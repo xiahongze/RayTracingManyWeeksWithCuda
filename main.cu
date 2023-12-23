@@ -9,6 +9,10 @@
 #include "camera.h"
 #include "material.h"
 
+#ifndef RAY_MAX_DEPTH
+#define RAY_MAX_DEPTH 50
+#endif
+
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
 
@@ -27,11 +31,11 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 // it was blowing up the stack, so we have to turn this into a
 // limited-depth loop instead.  Later code in the book limits to a max
 // depth of 50, so we adapt this a few chapters early on the GPU.
-__device__ vec3 color(const ray &r, hitable **world, curandState *local_rand_state)
+__device__ vec3 get_ray_color_pixel(const ray &r, hitable **world, curandState *local_rand_state)
 {
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
-    for (int i = 0; i < 50; i++)
+    for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
@@ -95,7 +99,7 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hit
         float u = float(i + curand_uniform(&local_rand_state)) / float(max_x);
         float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
         ray r = (*cam)->get_ray(u, v, &local_rand_state);
-        col += color(r, world, &local_rand_state);
+        col += get_ray_color_pixel(r, world, &local_rand_state);
     }
     rand_state[pixel_index] = local_rand_state;
     col /= float(ns);
