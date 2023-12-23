@@ -13,6 +13,10 @@
 #define RAY_MAX_DEPTH 50
 #endif
 
+#ifndef RAND_SEED
+#define RAND_SEED 1984
+#endif
+
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
 
@@ -67,7 +71,7 @@ __global__ void rand_init(curandState *rand_state)
 {
     if (threadIdx.x == 0 && blockIdx.x == 0)
     {
-        curand_init(1984, 0, 0, rand_state);
+        curand_init(RAND_SEED, 0, 0, rand_state);
     }
 }
 
@@ -79,10 +83,10 @@ __global__ void render_init(int max_x, int max_y, curandState *rand_state)
         return;
     int pixel_index = j * max_x + i;
     // Original: Each thread gets same seed, a different sequence number, no offset
-    // curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
+    // curand_init(RAND_SEED, pixel_index, 0, &rand_state[pixel_index]);
     // BUGFIX, see Issue#2: Each thread gets different seed, same sequence for
     // performance improvement of about 2x!
-    curand_init(1984 + pixel_index, 0, 0, &rand_state[pixel_index]);
+    curand_init(RAND_SEED + pixel_index, 0, 0, &rand_state[pixel_index]);
 }
 
 __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hitable **world, curandState *rand_state)
