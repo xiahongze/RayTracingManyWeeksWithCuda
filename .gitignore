@@ -33,3 +33,7 @@
 
 # editor
 .vscode
+
+# outputs
+main
+out.*

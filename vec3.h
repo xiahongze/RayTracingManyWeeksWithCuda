@@ -39,6 +39,13 @@ public:
     __host__ __device__ inline float squared_length() const { return e[0] * e[0] + e[1] * e[1] + e[2] * e[2]; }
     __host__ __device__ inline void make_unit_vector();
 
+    __host__ __device__ inline void to_gamma_space()
+    {
+        e[0] = sqrt(e[0]);
+        e[1] = sqrt(e[1]);
+        e[2] = sqrt(e[2]);
+    }
+
     float e[3];
 };
 

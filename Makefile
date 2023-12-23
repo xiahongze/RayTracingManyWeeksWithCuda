@@ -13,28 +13,28 @@ GENCODE_FLAGS  =
 SRCS = main.cu
 INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h
 
-cudart: cudart.o
-	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o cudart cudart.o
+main: main.o
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main main.o
 
-cudart.o: $(SRCS) $(INCS)
-	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o cudart.o -c main.cu
+main.o: $(SRCS) $(INCS)
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main.o -c main.cu
 
-out.ppm: cudart
+out.ppm: main
 	rm -f out.ppm
-	./cudart > out.ppm
+	./main > out.ppm
 
 out.jpg: out.ppm
 	rm -f out.jpg
 	convert out.ppm out.jpg
 
-profile_basic: cudart
-	nvprof ./cudart > out.ppm
+profile_basic: main
+	nvprof ./main > out.ppm
 
 # use nvprof --query-metrics
-profile_metrics: cudart
-	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./cudart > out.ppm
+profile_metrics: main
+	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./main > out.ppm
 
 clean:
-	rm -f cudart cudart.o out.ppm out.jpg
+	rm -f main main.o out.ppm out.jpg
 
 PHONY: clean

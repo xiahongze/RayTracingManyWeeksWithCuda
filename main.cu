@@ -99,9 +99,7 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hit
     }
     rand_state[pixel_index] = local_rand_state;
     col /= float(ns);
-    col[0] = sqrt(col[0]);
-    col[1] = sqrt(col[1]);
-    col[2] = sqrt(col[2]);
+    col.to_gamma_space();
     fb[pixel_index] = col;
 }
 
