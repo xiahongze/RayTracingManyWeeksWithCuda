@@ -91,7 +91,7 @@ __global__ void render_init(int max_x, int max_y, curandState *d_rand_state)
     curand_init(RAND_SEED + pixel_index, 0, 0, &d_rand_state[pixel_index]);
 }
 
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera **d_camera, hitable **d_world, curandState *d_rand_state)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, hitable **d_world, curandState *d_rand_state)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -104,7 +104,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera **d_came
     {
         float u = float(i + RND) / float(max_x);
         float v = float(j + RND) / float(max_y);
-        ray r = (*d_camera)->get_ray(u, v, &local_rand_state);
+        ray r = d_camera->get_ray(u, v, &local_rand_state);
         col += get_ray_color_pixel(r, d_world, &local_rand_state);
     }
     d_rand_state[pixel_index] = local_rand_state;
@@ -113,7 +113,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera **d_came
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, int ny, curandState *d_rand_state)
+__global__ void create_world(hitable_list **d_world, camera *d_camera, int nx, int ny, curandState *d_rand_state)
 {
     if (threadIdx.x > 0 || blockIdx.x > 0)
         return;
@@ -156,19 +156,19 @@ __global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, 
     vec3 lookat(0, 0, 0);
     float dist_to_focus = (lookfrom - lookat).length();
     float aperture = 0.1;
-    *d_camera = new camera(lookfrom,
-                           lookat,
-                           vec3(0, 1, 0),
-                           30.0,
-                           float(nx) / float(ny),
-                           aperture,
-                           dist_to_focus);
+    *d_camera = camera(lookfrom,
+                       lookat,
+                       vec3(0, 1, 0),
+                       30.0,
+                       float(nx) / float(ny),
+                       aperture,
+                       dist_to_focus);
 }
 
-__global__ void free_world(hitable_list **d_world, camera **d_camera)
+__global__ void free_world(hitable_list **d_world, camera *d_camera)
 {
     delete *d_world;
-    delete *d_camera;
+    delete d_camera;
 }
 
 int main()
@@ -203,8 +203,8 @@ int main()
     // make our world of hitables & the camera
     hitable_list **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
-    camera **d_camera;
-    checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera *)));
+    camera *d_camera;
+    checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
     create_world<<<1, 1>>>(d_world, d_camera, nx, ny, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
