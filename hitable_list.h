@@ -19,6 +19,7 @@ public:
         {
             delete list[i];
         }
+        delete list;
     }
     hitable **list;
     int list_size;
