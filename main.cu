@@ -69,15 +69,15 @@ __device__ vec3 get_ray_color_pixel(const ray &r, hitable **world, curandState *
     return vec3(0.0, 0.0, 0.0); // exceeded recursion
 }
 
-__global__ void rand_init(curandState *rand_state)
+__global__ void rand_init(curandState *d_rand_state)
 {
     if (threadIdx.x > 0 || blockIdx.x > 0)
         return;
 
-    curand_init(RAND_SEED, 0, 0, rand_state);
+    curand_init(RAND_SEED, 0, 0, d_rand_state);
 }
 
-__global__ void render_init(int max_x, int max_y, curandState *rand_state)
+__global__ void render_init(int max_x, int max_y, curandState *d_rand_state)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -88,32 +88,32 @@ __global__ void render_init(int max_x, int max_y, curandState *rand_state)
     // curand_init(RAND_SEED, pixel_index, 0, &rand_state[pixel_index]);
     // BUGFIX, see Issue#2: Each thread gets different seed, same sequence for
     // performance improvement of about 2x!
-    curand_init(RAND_SEED + pixel_index, 0, 0, &rand_state[pixel_index]);
+    curand_init(RAND_SEED + pixel_index, 0, 0, &d_rand_state[pixel_index]);
 }
 
-__global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hitable **world, curandState *rand_state)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera **d_camera, hitable **d_world, curandState *d_rand_state)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y))
         return;
     int pixel_index = j * max_x + i;
-    curandState local_rand_state = rand_state[pixel_index];
+    curandState local_rand_state = d_rand_state[pixel_index];
     vec3 col(0, 0, 0);
     for (int s = 0; s < ns; s++)
     {
         float u = float(i + RND) / float(max_x);
         float v = float(j + RND) / float(max_y);
-        ray r = (*cam)->get_ray(u, v, &local_rand_state);
-        col += get_ray_color_pixel(r, world, &local_rand_state);
+        ray r = (*d_camera)->get_ray(u, v, &local_rand_state);
+        col += get_ray_color_pixel(r, d_world, &local_rand_state);
     }
-    rand_state[pixel_index] = local_rand_state;
+    d_rand_state[pixel_index] = local_rand_state;
     col /= float(ns);
     col.to_gamma_space();
-    fb[pixel_index] = col;
+    d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, int ny, curandState *rand_state)
+__global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, int ny, curandState *d_rand_state)
 {
     if (threadIdx.x > 0 || blockIdx.x > 0)
         return;
@@ -121,7 +121,7 @@ __global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, 
     // allocate hitable **d_list in GPU memory on device
     hitable **d_list = (hitable **)malloc((22 * 22 + 1 + 3) * sizeof(hitable *));
 
-    curandState local_rand_state = *rand_state;
+    curandState local_rand_state = *d_rand_state;
     d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
                            new lambertian(vec3(0.5, 0.5, 0.5)));
     int i = 1;
@@ -133,12 +133,12 @@ __global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, 
             vec3 center(a + RND, 0.2, b + RND);
             if (choose_mat < 0.8f)
             {
-                d_list[i++] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(rand_state).as_squared()));
+                d_list[i++] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(d_rand_state).as_squared()));
             }
             else if (choose_mat < 0.95f)
             {
                 d_list[i++] = new sphere(center, 0.2,
-                                         new metal(1.0f + 0.5f * (vec3::random_cuda(rand_state)), 0.5f * RND));
+                                         new metal(1.0f + 0.5f * (vec3::random_cuda(d_rand_state)), 0.5f * RND));
             }
             else
             {
@@ -149,7 +149,7 @@ __global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, 
     d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
     d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
     d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
-    *rand_state = local_rand_state;
+    *d_rand_state = local_rand_state;
     *d_world = new hitable_list(d_list, 22 * 22 + 1 + 3);
 
     vec3 lookfrom(13, 2, 3);
@@ -225,7 +225,7 @@ int main()
     double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
-    // Output FB as Image
+    // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
     std::cout << "P3\n"
               << nx << " " << ny << "\n255\n";
     for (int j = ny - 1; j >= 0; j--)
