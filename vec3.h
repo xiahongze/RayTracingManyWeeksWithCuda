@@ -4,6 +4,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
+#include <curand_kernel.h>
 
 class vec3
 {
@@ -44,6 +45,18 @@ public:
         e[0] = sqrt(e[0]);
         e[1] = sqrt(e[1]);
         e[2] = sqrt(e[2]);
+    }
+
+    __device__ static vec3 random_cuda(curandState *local_rand_state)
+    {
+        return vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state));
+    }
+
+    __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
+
+    __host__ __device__ inline vec3 as_sqared() const
+    {
+        return vec3(e[0] * e[0], e[1] * e[1], e[2] * e[2]);
     }
 
     float e[3];
@@ -92,6 +105,11 @@ __host__ __device__ inline vec3 operator/(const vec3 &v1, const vec3 &v2)
 __host__ __device__ inline vec3 operator*(float t, const vec3 &v)
 {
     return vec3(t * v.e[0], t * v.e[1], t * v.e[2]);
+}
+
+__host__ __device__ inline vec3 operator+(float t, const vec3 &v)
+{
+    return vec3(t + v.e[0], t + v.e[1], t + v.e[2]);
 }
 
 __host__ __device__ inline vec3 operator/(vec3 v, float t)
@@ -171,4 +189,13 @@ __host__ __device__ inline vec3 unit_vector(vec3 v)
     return v / v.length();
 }
 
+__device__ vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
+{
+    vec3 p;
+    do
+    {
+        p = 2.0 * vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) - vec3(1, 1, 0);
+    } while (dot(p, p) >= 1.0);
+    return p;
+}
 #endif
