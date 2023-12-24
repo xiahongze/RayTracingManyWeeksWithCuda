@@ -113,10 +113,13 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hit
     fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable **d_list, hitable_list **d_world, camera **d_camera, int nx, int ny, curandState *rand_state)
+__global__ void create_world(hitable_list **d_world, camera **d_camera, int nx, int ny, curandState *rand_state)
 {
     if (threadIdx.x > 0 || blockIdx.x > 0)
         return;
+
+    // allocate hitable **d_list in GPU memory on device
+    hitable **d_list = (hitable **)malloc((22 * 22 + 1 + 3) * sizeof(hitable *));
 
     curandState local_rand_state = *rand_state;
     d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
@@ -198,14 +201,11 @@ int main()
     checkCudaErrors(cudaDeviceSynchronize());
 
     // make our world of hitables & the camera
-    hitable **d_list;
-    int num_hitables = 22 * 22 + 1 + 3;
-    checkCudaErrors(cudaMalloc((void **)&d_list, num_hitables * sizeof(hitable *)));
     hitable_list **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
     camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera *)));
-    create_world<<<1, 1>>>(d_list, d_world, d_camera, nx, ny, d_rand_state2);
+    create_world<<<1, 1>>>(d_world, d_camera, nx, ny, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -246,7 +246,7 @@ int main()
     free_world<<<1, 1>>>(d_world, d_camera);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
-    checkCudaErrors(cudaFree(d_list));
+    // checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_rand_state));
     checkCudaErrors(cudaFree(d_rand_state2));
     checkCudaErrors(cudaFree(fb));
