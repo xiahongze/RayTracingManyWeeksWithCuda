@@ -130,7 +130,7 @@ __global__ void create_world(hitable **d_list, hitable **d_world, camera **d_cam
             vec3 center(a + RND, 0.2, b + RND);
             if (choose_mat < 0.8f)
             {
-                d_list[i++] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(rand_state).as_sqared()));
+                d_list[i++] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(rand_state).as_squared()));
             }
             else if (choose_mat < 0.95f)
             {

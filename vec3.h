@@ -54,7 +54,7 @@ public:
 
     __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
 
-    __host__ __device__ inline vec3 as_sqared() const
+    __host__ __device__ inline vec3 as_squared() const
     {
         return vec3(e[0] * e[0], e[1] * e[1], e[2] * e[2]);
     }
