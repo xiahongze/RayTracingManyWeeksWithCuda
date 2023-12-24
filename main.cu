@@ -17,6 +17,8 @@
 #define RAND_SEED 1984
 #endif
 
+#define RND (curand_uniform(&local_rand_state))
+
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
 
@@ -100,8 +102,8 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hit
     vec3 col(0, 0, 0);
     for (int s = 0; s < ns; s++)
     {
-        float u = float(i + curand_uniform(&local_rand_state)) / float(max_x);
-        float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
+        float u = float(i + RND) / float(max_x);
+        float v = float(j + RND) / float(max_y);
         ray r = (*cam)->get_ray(u, v, &local_rand_state);
         col += get_ray_color_pixel(r, world, &local_rand_state);
     }
@@ -110,8 +112,6 @@ __global__ void render(vec3 *fb, int max_x, int max_y, int ns, camera **cam, hit
     col.to_gamma_space();
     fb[pixel_index] = col;
 }
-
-#define RND (curand_uniform(&local_rand_state))
 
 __global__ void create_world(hitable **d_list, hitable **d_world, camera **d_camera, int nx, int ny, curandState *rand_state)
 {
