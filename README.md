@@ -50,5 +50,6 @@ int main() {
 }
 ```
 
-In summary, if you need to update the pointer passed in, you need to pass in a pointer of pointer. This is the case when
-we need to have a reference on host memory to the memory allocated on device.
+In summary, if you need to update the pointer to a class passed in, you need to pass in a pointer of pointer. This is the case when
+we need to have a reference on host memory to the memory allocated on device. This is not the case when we only need to update an
+array of primitive types, such as `int *list` or `float *list` or `struct` of primitive types.
