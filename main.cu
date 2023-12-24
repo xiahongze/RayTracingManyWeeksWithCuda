@@ -163,17 +163,6 @@ __global__ void create_world(hitable **d_list, hitable **d_world, camera **d_cam
                            dist_to_focus);
 }
 
-__global__ void free_world(hitable **d_list, hitable **d_world, camera **d_camera)
-{
-    for (int i = 0; i < 22 * 22 + 1 + 3; i++)
-    {
-        delete ((sphere *)d_list[i])->mat_ptr;
-        delete d_list[i];
-    }
-    delete *d_world;
-    delete *d_camera;
-}
-
 int main()
 {
     int nx = 1200;
@@ -247,7 +236,6 @@ int main()
 
     // clean up
     checkCudaErrors(cudaDeviceSynchronize());
-    free_world<<<1, 1>>>(d_list, d_world, d_camera);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));

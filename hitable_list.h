@@ -13,6 +13,13 @@ public:
         list_size = n;
     }
     __device__ virtual bool hit(const ray &r, float tmin, float tmax, hit_record &rec) const;
+    __device__ ~hitable_list()
+    {
+        for (int i = 0; i < list_size; i++)
+        {
+            delete list[i];
+        }
+    }
     hitable **list;
     int list_size;
 };
