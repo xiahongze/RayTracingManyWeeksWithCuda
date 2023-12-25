@@ -11,7 +11,7 @@ NVCCFLAGS      = $(NVCC_DBG) -m64
 GENCODE_FLAGS  = 
 
 SRCS = main.cu
-INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h
+INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h interval.h
 
 main: main.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main main.o
