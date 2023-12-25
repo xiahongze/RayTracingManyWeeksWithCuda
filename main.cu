@@ -96,10 +96,10 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
-
-    int idx = 4 + j * 22 + i;
-    if (idx >= list_size)
+    if ((i >= 22) || (j >= 22))
         return;
+    int idx = 4 + j * 22 + i;
+
     curandState local_rand_state;
     curand_init(RAND_SEED + idx, 0, 0, &local_rand_state);
 
