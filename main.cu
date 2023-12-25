@@ -69,36 +69,16 @@ __device__ vec3 get_ray_color_pixel(const ray &r, hitable **world, curandState *
     return vec3(0.0, 0.0, 0.0); // exceeded recursion
 }
 
-__global__ void rand_init(curandState *d_rand_state)
-{
-    if (threadIdx.x > 0 || blockIdx.x > 0)
-        return;
-
-    curand_init(RAND_SEED, 0, 0, d_rand_state);
-}
-
-__global__ void render_init(int max_x, int max_y, curandState *d_rand_state)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, hitable **d_world)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y))
         return;
     int pixel_index = j * max_x + i;
-    // Original: Each thread gets same seed, a different sequence number, no offset
-    // curand_init(RAND_SEED, pixel_index, 0, &rand_state[pixel_index]);
-    // BUGFIX, see Issue#2: Each thread gets different seed, same sequence for
-    // performance improvement of about 2x!
-    curand_init(RAND_SEED + pixel_index, 0, 0, &d_rand_state[pixel_index]);
-}
+    curandState local_rand_state;
+    curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
 
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, hitable **d_world, curandState *d_rand_state)
-{
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i >= max_x) || (j >= max_y))
-        return;
-    int pixel_index = j * max_x + i;
-    curandState local_rand_state = d_rand_state[pixel_index];
     vec3 col(0, 0, 0);
     for (int s = 0; s < ns; s++)
     {
@@ -107,7 +87,6 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
         ray r = d_camera->get_ray(u, v, &local_rand_state);
         col += get_ray_color_pixel(r, d_world, &local_rand_state);
     }
-    d_rand_state[pixel_index] = local_rand_state;
     col /= float(ns);
     col.to_gamma_space();
     d_fb[pixel_index] = col;
@@ -240,14 +219,6 @@ int main()
     vec3 *fb;
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
 
-    // allocate random state
-    curandState *d_rand_state;
-    checkCudaErrors(cudaMalloc((void **)&d_rand_state, num_pixels * sizeof(curandState)));
-    curandState *d_rand_state2;
-    checkCudaErrors(cudaMalloc((void **)&d_rand_state2, 1 * sizeof(curandState)));
-
-    // we need that 2nd random state to be initialized for the world creation
-    rand_init<<<1, 1>>>(d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -269,11 +240,10 @@ int main()
     // Render our buffer
     dim3 blocks(nx / tx + 1, ny / ty + 1);
     dim3 threads(tx, ty);
-    render_init<<<blocks, threads>>>(nx, ny, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     // down cast to hitable **
-    render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world, d_rand_state);
+    render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
@@ -302,8 +272,6 @@ int main()
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(d_list));
-    checkCudaErrors(cudaFree(d_rand_state));
-    checkCudaErrors(cudaFree(d_rand_state2));
     checkCudaErrors(cudaFree(fb));
 
     cudaDeviceReset();
