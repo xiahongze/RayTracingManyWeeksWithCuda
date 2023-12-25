@@ -12,7 +12,7 @@ public:
         list = l;
         list_size = n;
     }
-    __device__ virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const;
+    __device__ virtual bool hit(const ray &r, const interval ray_t, hit_record &rec) const;
     __device__ ~hitable_list()
     {
         for (int i = 0; i < list_size; i++)
@@ -24,7 +24,7 @@ public:
     int list_size;
 };
 
-__device__ bool hitable_list::hit(const ray &r, interval ray_t, hit_record &rec) const
+__device__ bool hitable_list::hit(const ray &r, const interval ray_t, hit_record &rec) const
 {
     hit_record temp_rec;
     bool hit_anything = false;

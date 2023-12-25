@@ -9,7 +9,7 @@ class sphere : public hitable
 public:
     __device__ sphere() {}
     __device__ sphere(vec3 cen, float r, material *m) : center(cen), radius(r), mat_ptr(m){};
-    __device__ virtual bool hit(const ray &r, interval ray_t, hit_record &rec) const;
+    __device__ virtual bool hit(const ray &r, const interval ray_t, hit_record &rec) const;
     __device__ ~sphere()
     {
         delete mat_ptr;
@@ -19,7 +19,7 @@ public:
     material *mat_ptr;
 };
 
-__device__ bool sphere::hit(const ray &r, interval ray_t, hit_record &rec) const
+__device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
 {
     vec3 oc = r.origin() - center;
     float a = dot(r.direction(), r.direction());
