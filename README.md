@@ -4,52 +4,20 @@
 
 ### Why keeping `hittable **list` instead of `hittable *list`?
 
-This is because we allocate memory for `hittable` objects on the device and we want to keep the reference in host memory, so that we can pass this pointer of pointer to another device function (`__global__` function), which will then be able to access the `hittable` objects on the device. If we use `hittable *list`, then in the device function, we are not able to create an object and pass its pointer to the `hittable *list` on the device, because the object will be release after the function returns and also because setting `list = some_object_pointer` does not give us the some pointer after the function returns. See the code below:
+The reason behind this is actually complicated. Jump into the posts below for detailed explanations.
 
-- A good example
+- [How to implement device side CUDA virtual functions?](https://stackoverflow.com/questions/26812913/how-to-implement-device-side-cuda-virtual-functions)
+- [Polymorphism and derived classes in CUDA / CUDA Thrust](https://stackoverflow.com/questions/22988244/polymorphism-and-derived-classes-in-cuda-cuda-thrust/23476510#23476510)
 
-```cpp
-__global__ void create_hittable(hittable **list, int n) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        list = new hittable*[n];
-        for (int i = 0; i < n; i++) {
-            list[i] = new sphere(vec3(0, 0, 0), 1);
-        }
-    }
-}
+My simple layman explanation is that,
 
-int main() {
-    hittable **list;
-    create_hittable<<<1, 1>>>(list, 1);
-    ...
-    // list will contains pointers of pointers which point to valid memory on device
-}
-```
+- `hittable` is an abstract class containing a virtual function `hit`.
+- `hittable_list` is a derived class of `hittable` containing a list of `hittable` objects.
+- To use virtual functions in CUDA, we need to have the object instantiated in device memory.
+- We can't just use cudaMalloc directly on host to allocate memory directly for the class and instead, we need to
+  - cudaMalloc to allocate memory of a pointer to the class on host
+  - pass this pointer to a kernel
+  - use `new` to allocate memory for the class in device (that is how a class is instantiated in device memory)
+  - or `malloc` directly in device memory in a kernel
 
-- A bad example
-
-```cpp
-__global__ void create_hittable(hittable *list, int n) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        list = new hittable[n];
-        for (int i = 0; i < n; i++) {
-            list[i] = sphere(vec3(0, 0, 0), 1);
-        }
-
-        // within this scope, list is a pointer to valid memory on device
-        // however, after this function returns, the list passed in will not be updated
-        // and the memory allocated in this scope will be dangling too.
-    }
-}
-
-int main() {
-    hittable *list;
-    create_hittable<<<1, 1>>>(list, 1);
-    ...
-    // list will be a pointer to invalid memory on device
-}
-```
-
-In summary, if you need to update the pointer to a class passed in, you need to pass in a pointer of pointer. This is the case when
-we need to have a reference on host memory to the memory allocated on device. This is not the case when we only need to update an
-array of primitive types, such as `int *list` or `float *list` or `struct` of primitive types.
+The reason for using `hittable` is that we want to keep this simple interface such that objects of different types can be stored in the same list.
