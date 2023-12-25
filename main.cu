@@ -8,6 +8,7 @@
 #include "hitable_list.h"
 #include "camera.h"
 #include "material.h"
+#include "interval.h"
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -44,7 +45,7 @@ __device__ vec3 get_ray_color_pixel(const ray &r, hitable **world, curandState *
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
-        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
+        if ((*world)->hit(cur_ray, interval(0.001f, FLT_MAX), rec))
         {
             ray scattered;
             vec3 attenuation;
@@ -185,7 +186,7 @@ int main()
     start = clock();
 
     // Render our buffer
-    dim3 blocks(nx / tx + 1, ny / ty + 1);
+    dim3 blocks(nx / tx + (nx % tx ? 1 : 0), ny / ty + (ny % ty ? 1 : 0));
     dim3 threads(tx, ty);
     render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world);
     checkCudaErrors(cudaGetLastError());
