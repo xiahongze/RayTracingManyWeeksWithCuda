@@ -1,6 +1,7 @@
 CUDA_PATH     ?= /usr/local/cuda
 HOST_COMPILER  = g++
 NVCC           = $(CUDA_PATH)/bin/nvcc -ccbin $(HOST_COMPILER)
+NVPROF         = $(CUDA_PATH)/bin/nvprof
 
 # select one of these for Debug vs. Release
 #NVCC_DBG       = -g -G
@@ -28,7 +29,7 @@ out.jpg: out.ppm
 	convert out.ppm out.jpg
 
 profile_basic: main
-	nvprof ./main > out.ppm
+	$(NVPROF) ./main > out.ppm
 
 # use nvprof --query-metrics
 profile_metrics: main
