@@ -186,7 +186,7 @@ int main()
     start = clock();
 
     // Render our buffer
-    dim3 blocks(nx / tx + 1, ny / ty + 1);
+    dim3 blocks(nx / tx, ny / ty);
     dim3 threads(tx, ty);
     render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world);
     checkCudaErrors(cudaGetLastError());
