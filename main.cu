@@ -92,57 +92,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, curandState *d_rand_state)
-{
-    if (threadIdx.x > 0 || blockIdx.x > 0)
-        return;
-
-    curandState local_rand_state = *d_rand_state;
-    d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                           new lambertian(vec3(0.5, 0.5, 0.5)));
-    int i = 1;
-    for (int a = -11; a < 11; a++)
-    {
-        for (int b = -11; b < 11; b++)
-        {
-            float choose_mat = RND;
-            vec3 center(a + RND, 0.2, b + RND);
-            if (choose_mat < 0.8f)
-            {
-                d_list[i++] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(d_rand_state).as_squared()));
-            }
-            else if (choose_mat < 0.95f)
-            {
-                d_list[i++] = new sphere(center, 0.2,
-                                         new metal(1.0f + 0.5f * (vec3::random_cuda(d_rand_state)), 0.5f * RND));
-            }
-            else
-            {
-                d_list[i++] = new sphere(center, 0.2, new dielectric(1.5));
-            }
-        }
-    }
-    d_list[i++] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
-    d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
-    d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
-    *d_rand_state = local_rand_state;
-    *d_world = new hitable_list(d_list, list_size);
-
-    vec3 lookfrom(13, 2, 3);
-    vec3 lookat(0, 0, 0);
-    float dist_to_focus = (lookfrom - lookat).length();
-    float aperture = 0.1;
-    *d_camera = camera(lookfrom,
-                       lookat,
-                       vec3(0, 1, 0),
-                       30.0,
-                       float(nx) / float(ny),
-                       aperture,
-                       dist_to_focus);
-}
-
-// create a version of create_world that runs in parallel
-__global__ void create_world_parallel(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny)
+__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -219,9 +169,6 @@ int main()
     vec3 *fb;
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
 
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-
     // make our world of hitables & the camera
     hitable_list **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
@@ -230,22 +177,20 @@ int main()
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    // create_world<<<1, 1>>>(d_world, d_list, d_camera, list_size, nx, ny, d_rand_state2);
-    create_world_parallel<<<dim3(22, 22), dim3(1, 1)>>>(d_world, d_list, d_camera, list_size, nx, ny);
+    create_world<<<dim3(22, 22), dim3(1, 1)>>>(d_world, d_list, d_camera, list_size, nx, ny);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     clock_t start, stop;
     start = clock();
+
     // Render our buffer
     dim3 blocks(nx / tx + 1, ny / ty + 1);
     dim3 threads(tx, ty);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-    // down cast to hitable **
     render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+
     stop = clock();
     double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "took " << timer_seconds << " seconds.\n";
@@ -266,8 +211,6 @@ int main()
     }
 
     // clean up
-    checkCudaErrors(cudaDeviceSynchronize());
-    checkCudaErrors(cudaGetLastError());
     free_world<<<1, 1>>>(d_world);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
