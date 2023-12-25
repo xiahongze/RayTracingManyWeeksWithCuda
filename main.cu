@@ -8,6 +8,7 @@
 #include "hitable_list.h"
 #include "camera.h"
 #include "material.h"
+#include "interval.h"
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -44,7 +45,7 @@ __device__ vec3 get_ray_color_pixel(const ray &r, hitable **world, curandState *
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
-        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec))
+        if ((*world)->hit(cur_ray, interval(0.001f, FLT_MAX), rec))
         {
             ray scattered;
             vec3 attenuation;
