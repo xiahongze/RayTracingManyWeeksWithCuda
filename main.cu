@@ -156,8 +156,8 @@ int main()
     int nx = 1200;
     int ny = 800;
     int ns = 10;
-    int tx = 8;
-    int ty = 8;
+    int tx = 6;
+    int ty = 4;
 
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
