@@ -113,13 +113,10 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, camera *d_camera, int nx, int ny, curandState *d_rand_state)
+__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, curandState *d_rand_state)
 {
     if (threadIdx.x > 0 || blockIdx.x > 0)
         return;
-
-    // allocate hitable **d_list in GPU memory on device
-    hitable **d_list = (hitable **)malloc((22 * 22 + 1 + 3) * sizeof(hitable *));
 
     curandState local_rand_state = *d_rand_state;
     d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
@@ -150,7 +147,7 @@ __global__ void create_world(hitable_list **d_world, camera *d_camera, int nx, i
     d_list[i++] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
     d_list[i++] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
     *d_rand_state = local_rand_state;
-    *d_world = new hitable_list(d_list, 22 * 22 + 1 + 3);
+    *d_world = new hitable_list(d_list, list_size);
 
     vec3 lookfrom(13, 2, 3);
     vec3 lookat(0, 0, 0);
@@ -204,9 +201,12 @@ int main()
     // make our world of hitables & the camera
     hitable_list **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
+    hitable **d_list;
+    int list_size = 22 * 22 + 1 + 3;
+    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<1, 1>>>(d_world, d_camera, nx, ny, d_rand_state2);
+    create_world<<<1, 1>>>(d_world, d_list, d_camera, list_size, nx, ny, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -247,6 +247,7 @@ int main()
     free_world<<<1, 1>>>(d_world);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
+    checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_rand_state));
     checkCudaErrors(cudaFree(d_rand_state2));
     checkCudaErrors(cudaFree(fb));

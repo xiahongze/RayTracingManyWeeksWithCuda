@@ -17,9 +17,8 @@ public:
     {
         for (int i = 0; i < list_size; i++)
         {
-            delete list[i];
+            delete list[i]; // list[i] was allocated with new
         }
-        delete list;
     }
     hitable **list;
     int list_size;
