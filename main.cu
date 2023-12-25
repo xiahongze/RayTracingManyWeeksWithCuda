@@ -165,10 +165,11 @@ __global__ void create_world(hitable_list **d_world, camera *d_camera, int nx, i
                        dist_to_focus);
 }
 
-__global__ void free_world(hitable_list **d_world, camera *d_camera)
+__global__ void free_world(hitable_list **d_world)
 {
+    if (threadIdx.x > 0 || blockIdx.x > 0)
+        return;
     delete *d_world;
-    delete d_camera;
 }
 
 int main()
@@ -243,10 +244,9 @@ int main()
     // clean up
     checkCudaErrors(cudaDeviceSynchronize());
     checkCudaErrors(cudaGetLastError());
-    free_world<<<1, 1>>>(d_world, d_camera);
+    free_world<<<1, 1>>>(d_world);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
-    // checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_rand_state));
     checkCudaErrors(cudaFree(d_rand_state2));
     checkCudaErrors(cudaFree(fb));
