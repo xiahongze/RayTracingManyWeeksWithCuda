@@ -88,25 +88,22 @@ public:
                             ray &scattered,
                             curandState *local_rand_state) const
     {
-        vec3 outward_normal;
         attenuation = vec3(1.0, 1.0, 1.0);
 
         // determine whether ray is entering or leaving the material
         // and calculate the refractive index accordingly
-        float ni_over_nt;
+
+        // assume facing outwards by default
+        vec3 outward_normal = rec.normal;
+        float ni_over_nt = 1.0f / ref_idx;
         float cosine = dot(r_in.direction(), rec.normal) / r_in.direction().length();
+
         if (dot(r_in.direction(), rec.normal) > 0.0f)
         {
             // facing inwards
             outward_normal = -rec.normal;
             ni_over_nt = ref_idx;
             cosine = sqrt(1.0f - ref_idx * ref_idx * (1 - cosine * cosine));
-        }
-        else
-        {
-            // facing outwards
-            outward_normal = rec.normal;
-            ni_over_nt = 1.0f / ref_idx;
         }
 
         vec3 refracted;
