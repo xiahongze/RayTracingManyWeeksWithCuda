@@ -43,7 +43,6 @@ __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec)
     rec.t = root;
     rec.p = r.point_at_parameter(rec.t);
     rec.normal = (rec.p - center) / radius;
-    rec.set_face_normal(r, rec.normal);
     rec.mat_ptr = mat_ptr;
 
     return true;
