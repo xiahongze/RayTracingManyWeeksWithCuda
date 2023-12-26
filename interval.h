@@ -1,7 +1,7 @@
+#pragma once
+
 #include <float.h>
 
-#ifndef INTERVAL_H
-#define INTERVAL_H
 // adapted from https://github.com/RayTracing/raytracing.github.io
 
 class interval
@@ -48,5 +48,3 @@ public:
 
 const interval interval::empty = interval(+FLT_MAX, -FLT_MAX);
 const interval interval::universe = interval(-FLT_MAX, +FLT_MAX);
-
-#endif

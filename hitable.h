@@ -1,5 +1,4 @@
-#ifndef HITABLEH
-#define HITABLEH
+#pragma once
 
 #include "ray.h"
 #include "interval.h"
@@ -8,6 +7,7 @@ class material;
 
 struct hit_record
 {
+public:
     float t;
     vec3 p;
     vec3 normal;
@@ -19,5 +19,3 @@ class hitable
 public:
     __device__ virtual bool hit(const ray &r, const interval ray_t, hit_record &rec) const = 0;
 };
-
-#endif

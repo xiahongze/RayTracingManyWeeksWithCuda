@@ -1,5 +1,4 @@
-#ifndef VEC3H
-#define VEC3H
+#pragma once
 
 #include <math.h>
 #include <stdlib.h>
@@ -47,12 +46,20 @@ public:
         e[2] = sqrt(e[2]);
     }
 
+    __host__ __device__ inline bool near_zero() const
+    {
+        // Return true if the vector is close to zero in all dimensions.
+        auto s = 1e-8;
+        return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+    }
+
     __device__ static vec3 random_cuda(curandState *local_rand_state)
     {
         return vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state));
     }
 
     __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
+    __device__ static vec3 random_in_unit_sphere(curandState *local_rand_state);
 
     __host__ __device__ inline vec3 as_squared() const
     {
@@ -192,10 +199,21 @@ __host__ __device__ inline vec3 unit_vector(vec3 v)
 __device__ vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
 {
     vec3 p;
+    vec3 offset(1, 1, 0);
     do
     {
-        p = 2.0 * vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) - vec3(1, 1, 0);
-    } while (dot(p, p) >= 1.0);
+        p = 2.0f * vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) - offset;
+    } while (p.squared_length() >= 1.0f);
     return p;
 }
-#endif
+
+__device__ vec3 vec3::random_in_unit_sphere(curandState *local_rand_state)
+{
+    vec3 p;
+    vec3 offset(1, 1, 1);
+    do
+    {
+        p = 2.0f * vec3::random_cuda(local_rand_state) - offset;
+    } while (p.squared_length() >= 1.0f);
+    return p;
+}

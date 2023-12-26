@@ -1,5 +1,4 @@
-#ifndef SPHEREH
-#define SPHEREH
+#pragma once
 
 #include "hitable.h"
 #include "material.h"
@@ -47,5 +46,3 @@ __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec)
 
     return true;
 }
-
-#endif
