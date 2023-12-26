@@ -8,6 +8,7 @@ struct hit_record;
 
 __device__ float schlick(float cosine, float ref_idx)
 {
+    // Use Schlick's approximation for reflectance.
     float r0 = (1.0f - ref_idx) / (1.0f + ref_idx);
     r0 = r0 * r0;
     return r0 + (1.0f - r0) * pow((1.0f - cosine), 5.0f);
@@ -44,8 +45,13 @@ public:
     __device__ lambertian(const vec3 &a) : albedo(a) {}
     __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
     {
-        vec3 target = rec.p + rec.normal + vec3::random_in_unit_sphere(local_rand_state);
-        scattered = ray(rec.p, target - rec.p);
+        vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
+
+        // Catch degenerate scatter direction
+        if (scatter_direction.near_zero())
+            scatter_direction = rec.normal;
+
+        scattered = ray(rec.p, scatter_direction);
         attenuation = albedo;
         return true;
     }
