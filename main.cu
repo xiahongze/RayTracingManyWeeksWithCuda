@@ -76,16 +76,16 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y))
         return;
-    int pixel_index = j * max_x + i;
+    // flip the world upside down (as we have added a len to the camera)
+    int pixel_index = (max_y - j - 1) * max_x + i;
+
     curandState local_rand_state;
     curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
 
     vec3 col(0, 0, 0);
     for (int s = 0; s < ns; s++)
     {
-        float u = float(i + RND) / float(max_x);
-        float v = float(j + RND) / float(max_y);
-        ray r = d_camera->get_ray(u, v, &local_rand_state);
+        ray r = d_camera->get_ray(i, j, &local_rand_state);
         col += get_ray_color_pixel(r, d_world, &local_rand_state);
     }
     col /= float(ns);
@@ -131,17 +131,16 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
         d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
         *d_world = new hitable_list(d_list, list_size);
-        vec3 lookfrom(13, 2, 3);
-        vec3 lookat(0, 0, 0);
-        float dist_to_focus = (lookfrom - lookat).length();
-        float aperture = 0.1;
-        *d_camera = camera(lookfrom,
-                           lookat,
-                           vec3(0, 1, 0),
-                           30.0,
-                           float(nx) / float(ny),
-                           aperture,
-                           dist_to_focus);
+
+        *d_camera = camera();
+        d_camera->lookfrom = vec3(13, 2, 3);
+        d_camera->lookat = vec3(0, 0, 0);
+        d_camera->vup = vec3(0, 1, 0);
+        d_camera->vfov = 30.0;
+        d_camera->image_width = nx;
+        d_camera->image_height = ny;
+        d_camera->defocus_angle = 0.6;
+        d_camera->initialize();
     }
 }
 
