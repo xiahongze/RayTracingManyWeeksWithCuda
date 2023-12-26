@@ -71,10 +71,6 @@ public:
 
     __device__ ray get_ray(int i, int j, curandState *local_rand_state)
     {
-        // vec3 rd = lens_radius * vec3::random_in_unit_disk(local_rand_state);
-        // vec3 offset = u * rd.x() + v * rd.y();
-        // return ray(origin + offset, lower_left_corner + s * horizontal + t * vertical - origin - offset);
-
         // Get a randomly-sampled camera ray for the pixel at location i,j, originating from
         // the camera defocus disk.
 
@@ -104,6 +100,7 @@ public:
 
     __device__ vec3 defocus_disk_sample(curandState *local_rand_state) const
     {
+        // Returns a random point in the camera defocus disk.
         vec3 p = vec3::random_in_unit_disk(local_rand_state);
         return center + p.x() * defocus_disk_u + p.y() * defocus_disk_v;
     }
