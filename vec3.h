@@ -1,5 +1,4 @@
-#ifndef VEC3H
-#define VEC3H
+#pragma once
 
 #include <math.h>
 #include <stdlib.h>
@@ -218,5 +217,3 @@ __device__ vec3 vec3::random_in_unit_sphere(curandState *local_rand_state)
     } while (p.squared_length() >= 1.0f);
     return p;
 }
-
-#endif

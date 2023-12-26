@@ -1,5 +1,4 @@
-#ifndef CAMERAH
-#define CAMERAH
+#pragma once
 
 #include <curand_kernel.h>
 #include "ray.h"
@@ -115,5 +114,3 @@ private:
     vec3 defocus_disk_u;      // Defocus disk horizontal radius
     vec3 defocus_disk_v;      // Defocus disk vertical radius
 };
-
-#endif

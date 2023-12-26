@@ -1,5 +1,5 @@
-#ifndef RAYH
-#define RAYH
+#pragma once
+
 #include "vec3.h"
 
 class ray
@@ -18,5 +18,3 @@ public:
     vec3 A;
     vec3 B;
 };
-
-#endif

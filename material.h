@@ -1,5 +1,4 @@
-#ifndef MATERIALH
-#define MATERIALH
+#pragma once
 
 struct hit_record;
 
@@ -127,4 +126,3 @@ public:
 
     float ref_idx;
 };
-#endif
