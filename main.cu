@@ -76,7 +76,9 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y))
         return;
-    int pixel_index = j * max_x + i;
+    // flip the world upside down (as we have added a len to the camera)
+    int pixel_index = (max_y - j - 1) * max_x + i;
+
     curandState local_rand_state;
     curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
 
