@@ -42,7 +42,7 @@ class lambertian : public material
 {
 public:
     __device__ lambertian(const vec3 &a) : albedo(a) {}
-    __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
     {
         vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
 
@@ -68,7 +68,7 @@ public:
         else
             fuzz = 1;
     }
-    __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
         scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere(local_rand_state));
@@ -83,11 +83,11 @@ class dielectric : public material
 {
 public:
     __device__ dielectric(float ri) : ref_idx(ri) {}
-    __device__ virtual bool scatter(const ray &r_in,
-                                    const hit_record &rec,
-                                    vec3 &attenuation,
-                                    ray &scattered,
-                                    curandState *local_rand_state) const
+    __device__ bool scatter(const ray &r_in,
+                            const hit_record &rec,
+                            vec3 &attenuation,
+                            ray &scattered,
+                            curandState *local_rand_state) const
     {
         attenuation = vec3(1.0, 1.0, 1.0);
         float refraction_ratio = rec.front_face ? (1.0 / ref_idx) : ref_idx;
