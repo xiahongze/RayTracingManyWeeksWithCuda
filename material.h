@@ -27,18 +27,6 @@ __device__ bool refract(const vec3 &v, const vec3 &n, float ni_over_nt, vec3 &re
         return false;
 }
 
-#define RANDVEC3 vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state))
-
-__device__ vec3 random_in_unit_sphere(curandState *local_rand_state)
-{
-    vec3 p;
-    do
-    {
-        p = 2.0f * RANDVEC3 - vec3(1, 1, 1);
-    } while (p.squared_length() >= 1.0f);
-    return p;
-}
-
 __device__ vec3 reflect(const vec3 &v, const vec3 &n)
 {
     return v - 2.0f * dot(v, n) * n;
@@ -56,7 +44,7 @@ public:
     __device__ lambertian(const vec3 &a) : albedo(a) {}
     __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
     {
-        vec3 target = rec.p + rec.normal + random_in_unit_sphere(local_rand_state);
+        vec3 target = rec.p + rec.normal + vec3::random_in_unit_sphere(local_rand_state);
         scattered = ray(rec.p, target - rec.p);
         attenuation = albedo;
         return true;
@@ -78,7 +66,7 @@ public:
     __device__ virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-        scattered = ray(rec.p, reflected + fuzz * random_in_unit_sphere(local_rand_state));
+        scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere(local_rand_state));
         attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0.0f);
     }

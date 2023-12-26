@@ -53,6 +53,7 @@ public:
     }
 
     __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
+    __device__ static vec3 random_in_unit_sphere(curandState *local_rand_state);
 
     __host__ __device__ inline vec3 as_squared() const
     {
@@ -192,10 +193,23 @@ __host__ __device__ inline vec3 unit_vector(vec3 v)
 __device__ vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
 {
     vec3 p;
+    vec3 offset(1, 1, 0);
     do
     {
-        p = 2.0 * vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) - vec3(1, 1, 0);
-    } while (dot(p, p) >= 1.0);
+        p = 2.0f * vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) - offset;
+    } while (p.squared_length() >= 1.0f);
     return p;
 }
+
+__device__ vec3 vec3::random_in_unit_sphere(curandState *local_rand_state)
+{
+    vec3 p;
+    vec3 offset(1, 1, 1);
+    do
+    {
+        p = 2.0f * vec3::random_cuda(local_rand_state) - offset;
+    } while (p.squared_length() >= 1.0f);
+    return p;
+}
+
 #endif
