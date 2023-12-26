@@ -91,11 +91,11 @@ public:
                             curandState *local_rand_state) const
     {
         vec3 outward_normal;
-        vec3 reflected = reflect(r_in.direction(), rec.normal);
-        float ni_over_nt;
         attenuation = vec3(1.0, 1.0, 1.0);
-        vec3 refracted;
-        float reflect_prob;
+
+        // determine whether ray is entering or leaving the material
+        // and calculate the refractive index accordingly
+        float ni_over_nt;
         float cosine = dot(r_in.direction(), rec.normal) / r_in.direction().length();
         if (dot(r_in.direction(), rec.normal) > 0.0f)
         {
@@ -110,14 +110,19 @@ public:
             outward_normal = rec.normal;
             ni_over_nt = 1.0f / ref_idx;
         }
-        if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
-            reflect_prob = schlick(cosine, ref_idx);
-        else
-            reflect_prob = 1.0f;
-        if (curand_uniform(local_rand_state) < reflect_prob)
-            scattered = ray(rec.p, reflected);
-        else
+
+        vec3 refracted;
+        bool can_refract = refract(r_in.direction(), outward_normal, ni_over_nt, refracted);
+        if (can_refract && curand_uniform(local_rand_state) > schlick(cosine, ref_idx))
+        {
             scattered = ray(rec.p, refracted);
+        }
+        else
+        {
+            vec3 reflected = reflect(r_in.direction(), rec.normal);
+            scattered = ray(rec.p, reflected);
+        }
+
         return true;
     }
 
