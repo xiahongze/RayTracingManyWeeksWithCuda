@@ -10,6 +10,7 @@
 #include "material.h"
 #include "interval.h"
 #include "image_utils.h"
+#include "cmd_parser.h"
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -151,7 +152,7 @@ __global__ void free_world(hitable_list **d_world)
     delete *d_world;
 }
 
-int main()
+int main(int argc, char **argv)
 {
     int nx = 1200;
     int ny = 800;
@@ -159,6 +160,7 @@ int main()
     int tx = 6;
     int ty = 4;
     const char *filename = "out.jpg";
+    parse_command_line(argc, argv);
 
     std::cout << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
     std::cout << "in " << tx << "x" << ty << " blocks.\n";
