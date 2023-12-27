@@ -7,19 +7,28 @@ class sphere : public hitable
 {
 public:
     __device__ sphere() {}
-    __device__ sphere(vec3 cen, float r, material *m) : center(cen), radius(r), mat_ptr(m){};
-    __device__ virtual bool hit(const ray &r, const interval ray_t, hit_record &rec) const;
+    __device__ sphere(vec3 cen, float r, material *m) : center1(cen), radius(r), mat_ptr(m), is_moving(false){};
+    __device__ sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(cen1), radius(r), mat_ptr(m), is_moving(true), center_vec(){};
+
+    __device__ bool hit(const ray &r, const interval ray_t, hit_record &rec) const override;
+    __device__ vec3 get_center(float time) const;
+
     __device__ ~sphere()
     {
         delete mat_ptr;
     }
-    vec3 center;
+
+private:
+    vec3 center1;
+    vec3 center_vec;
     float radius;
     material *mat_ptr;
+    bool is_moving;
 };
 
 __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
 {
+    vec3 center = is_moving ? get_center(r.get_time()) : center1;
     vec3 oc = r.origin() - center;
     float a = dot(r.direction(), r.direction());
     float half_b = dot(oc, r.direction());
@@ -45,4 +54,11 @@ __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec)
     rec.mat_ptr = mat_ptr;
 
     return true;
+}
+
+__device__ vec3 sphere::get_center(float time) const
+{
+    // Linearly interpolate from center1 to center2 according to time, where t=0 yields
+    // center1, and t=1 yields center2.
+    return center1 + time * center_vec;
 }
