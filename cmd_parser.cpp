@@ -1,5 +1,5 @@
-#include <iostream>
 #include "cmd_parser.h"
+#include <iostream>
 
 CommandLineOptions parse_command_line(int argc, char **argv)
 {

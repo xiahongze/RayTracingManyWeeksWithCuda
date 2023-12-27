@@ -1,9 +1,9 @@
 #pragma once
 
+#include <curand_kernel.h>
+#include <iostream>
 #include <math.h>
 #include <stdlib.h>
-#include <iostream>
-#include <curand_kernel.h>
 
 class vec3
 {

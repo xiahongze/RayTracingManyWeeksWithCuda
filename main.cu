@@ -1,16 +1,16 @@
-#include <iostream>
-#include <time.h>
-#include <float.h>
-#include <curand_kernel.h>
-#include "vec3.h"
+#include "camera.h"
+#include "cmd_parser.h"
+#include "hitable_list.h"
+#include "image_utils.h"
+#include "interval.h"
+#include "material.h"
 #include "ray.h"
 #include "sphere.h"
-#include "hitable_list.h"
-#include "camera.h"
-#include "material.h"
-#include "interval.h"
-#include "image_utils.h"
-#include "cmd_parser.h"
+#include "vec3.h"
+#include <curand_kernel.h>
+#include <float.h>
+#include <iostream>
+#include <time.h>
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50

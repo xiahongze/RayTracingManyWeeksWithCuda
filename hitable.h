@@ -1,7 +1,7 @@
 #pragma once
 
-#include "ray.h"
 #include "interval.h"
+#include "ray.h"
 
 class material;
 
