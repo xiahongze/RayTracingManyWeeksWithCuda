@@ -1,8 +1,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "external/stb_image_write.h"
 
-// Function to write a PNG image
-void writePNGImage(const char *filename, int width, int height, vec3 *fb)
+void writeJPGImage(const char *filename, int width, int height, vec3 *fb)
 {
     uint8_t *imageData = new uint8_t[width * height * 3];
     size_t index = 0;

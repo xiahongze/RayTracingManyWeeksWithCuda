@@ -190,7 +190,7 @@ int main(int argc, char **argv)
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
-    writePNGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
+    writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
 
     // clean up
     free_world<<<1, 1>>>(d_world);
