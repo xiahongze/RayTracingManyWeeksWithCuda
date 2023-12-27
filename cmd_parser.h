@@ -2,12 +2,18 @@
 
 struct CommandLineOptions
 {
-    std::string output_file = "output.jpg";
-    int image_width = 1200;
-    int image_height = 800;
-    int samples_per_pixel = 10;
-    int tx = 6;
-    int ty = 4;
+    // general inputs
+    std::string output_file;
+    int image_width;
+    int image_height;
+    int samples_per_pixel;
+    int tx;
+    int ty;
+
+    // scene inputs
+    // week 1 world
+    bool bounce;
+    float bounce_pct;
 };
 
 CommandLineOptions parse_command_line(int argc, char **argv);
