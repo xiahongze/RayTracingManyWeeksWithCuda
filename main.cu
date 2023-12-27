@@ -1,16 +1,16 @@
-#include <iostream>
-#include <time.h>
-#include <float.h>
-#include <curand_kernel.h>
-#include "vec3.h"
+#include "camera.h"
+#include "cmd_parser.h"
+#include "hitable_list.h"
+#include "image_utils.h"
+#include "interval.h"
+#include "material.h"
 #include "ray.h"
 #include "sphere.h"
-#include "hitable_list.h"
-#include "camera.h"
-#include "material.h"
-#include "interval.h"
-#include "image_utils.h"
-#include "cmd_parser.h"
+#include "vec3.h"
+#include <curand_kernel.h>
+#include <float.h>
+#include <iostream>
+#include <time.h>
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -94,7 +94,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny)
+__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -108,20 +108,28 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
     int a = i - 11;
     int b = j - 11;
 
-    vec3 center(a + RND, 0.2, b + RND);
+    float radius = 0.2;
+    vec3 center(a + RND, radius, b + RND);
+
     float choose_mat = RND;
     if (choose_mat < 0.8f)
     {
-        d_list[idx] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(&local_rand_state).as_squared()));
+        d_list[idx] = new sphere(center, radius, new lambertian(vec3::random_cuda(&local_rand_state).as_squared()));
     }
     else if (choose_mat < 0.95f)
     {
-        d_list[idx] = new sphere(center, 0.2,
+        d_list[idx] = new sphere(center, radius,
                                  new metal(1.0f + 0.5f * (vec3::random_cuda(&local_rand_state)), 0.5f * RND));
     }
     else
     {
-        d_list[idx] = new sphere(center, 0.2, new dielectric(1.5));
+        d_list[idx] = new sphere(center, radius, new dielectric(1.5));
+    }
+
+    if (bounce && RND < bounce_pct) // only 1/3 are allowed to move
+    {
+        ((sphere *)d_list[idx])->set_movable(true);
+        ((sphere *)d_list[idx])->set_center_vec(vec3(0, RND * radius * 2, 0));
     }
 
     if (i == 0 && j == 0)
@@ -171,7 +179,8 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_world, d_list, d_camera, list_size, cmd_opts.image_width, cmd_opts.image_height);
+    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_world, d_list, d_camera, list_size,
+                                               cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct);
     checkCudaErrors(cudaGetLastError());
 
     clock_t start, stop;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <curand_kernel.h>
 #include "ray.h"
+#include <curand_kernel.h>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -78,8 +78,9 @@ public:
 
         auto ray_origin = (defocus_angle <= 0.0) ? center : defocus_disk_sample(local_rand_state);
         auto ray_direction = pixel_sample - ray_origin;
+        auto ray_time = curand_uniform(local_rand_state);
 
-        return ray(ray_origin, ray_direction);
+        return ray(ray_origin, ray_direction, ray_time);
     }
 
     __device__ vec3 pixel_sample_square(curandState *local_rand_state) const

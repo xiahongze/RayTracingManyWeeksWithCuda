@@ -11,7 +11,7 @@ public:
         list = l;
         list_size = n;
     }
-    __device__ virtual bool hit(const ray &r, const interval ray_t, hit_record &rec) const;
+    __device__ bool hit(const ray &r, const interval ray_t, hit_record &rec) const override;
     __device__ ~hitable_list()
     {
         for (int i = 0; i < list_size; i++)

@@ -38,3 +38,5 @@ clean:
 	rm -f main main.o out.jpg
 
 PHONY: clean
+
+default: main
