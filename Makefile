@@ -12,7 +12,7 @@ NVCCFLAGS      = $(NVCC_DBG) -m64 -O3
 GENCODE_FLAGS  = 
 
 SRCS = main.cu
-INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h interval.h
+INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h interval.h image_utils.h
 
 main: main.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main main.o
@@ -20,16 +20,12 @@ main: main.o
 main.o: $(SRCS) $(INCS)
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main.o -c main.cu
 
-out.ppm: main
-	rm -f out.ppm
-	./main > out.ppm
-
-out.jpg: out.ppm
+out.jpg: main
 	rm -f out.jpg
-	convert out.ppm out.jpg
+	./main
 
 profile_basic: main
-	$(NVPROF) ./main > out.ppm
+	$(NVPROF) ./main
 
 # use nvprof --query-metrics
 profile_metrics: main

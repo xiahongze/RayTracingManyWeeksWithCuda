@@ -9,6 +9,7 @@
 #include "camera.h"
 #include "material.h"
 #include "interval.h"
+#include "image_utils.h"
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -76,8 +77,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i >= max_x) || (j >= max_y))
         return;
-    // flip the world upside down (as we have added a len to the camera)
-    int pixel_index = (max_y - j - 1) * max_x + i;
+    int pixel_index = j * max_x + i;
 
     curandState local_rand_state;
     curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
@@ -158,9 +158,11 @@ int main()
     int ns = 10;
     int tx = 6;
     int ty = 4;
+    const char *filename = "out.jpg";
 
-    std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
-    std::cerr << "in " << tx << "x" << ty << " blocks.\n";
+    std::cout << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
+    std::cout << "in " << tx << "x" << ty << " blocks.\n";
+    std::cout << "Output file: " << filename << "\n";
 
     int num_pixels = nx * ny;
     size_t fb_size = num_pixels * sizeof(vec3);
@@ -179,7 +181,6 @@ int main()
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
     create_world<<<dim3(22, 22), dim3(1, 1)>>>(d_world, d_list, d_camera, list_size, nx, ny);
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
 
     clock_t start, stop;
     start = clock();
@@ -196,19 +197,7 @@ int main()
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
-    std::cout << "P3\n"
-              << nx << " " << ny << "\n255\n";
-    for (int j = ny - 1; j >= 0; j--)
-    {
-        for (int i = 0; i < nx; i++)
-        {
-            size_t pixel_index = j * nx + i;
-            int ir = int(255.99 * fb[pixel_index].r());
-            int ig = int(255.99 * fb[pixel_index].g());
-            int ib = int(255.99 * fb[pixel_index].b());
-            std::cout << ir << " " << ig << " " << ib << "\n";
-        }
-    }
+    writePNGImage(filename, nx, ny, fb);
 
     // clean up
     free_world<<<1, 1>>>(d_world);
