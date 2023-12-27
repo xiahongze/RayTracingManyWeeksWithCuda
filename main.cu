@@ -10,6 +10,7 @@
 #include "material.h"
 #include "interval.h"
 #include "image_utils.h"
+#include "cmd_parser.h"
 
 #ifndef RAY_MAX_DEPTH
 #define RAY_MAX_DEPTH 50
@@ -151,20 +152,11 @@ __global__ void free_world(hitable_list **d_world)
     delete *d_world;
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    int nx = 1200;
-    int ny = 800;
-    int ns = 10;
-    int tx = 6;
-    int ty = 4;
-    const char *filename = "out.jpg";
+    auto cmd_opts = parse_command_line(argc, argv);
 
-    std::cout << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
-    std::cout << "in " << tx << "x" << ty << " blocks.\n";
-    std::cout << "Output file: " << filename << "\n";
-
-    int num_pixels = nx * ny;
+    int num_pixels = cmd_opts.image_width * cmd_opts.image_height;
     size_t fb_size = num_pixels * sizeof(vec3);
 
     // allocate FB
@@ -179,16 +171,17 @@ int main()
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<dim3(22, 22), dim3(1, 1)>>>(d_world, d_list, d_camera, list_size, nx, ny);
+    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_world, d_list, d_camera, list_size, cmd_opts.image_width, cmd_opts.image_height);
     checkCudaErrors(cudaGetLastError());
 
     clock_t start, stop;
     start = clock();
 
     // Render our buffer
-    dim3 blocks(nx / tx + (nx % tx ? 1 : 0), ny / ty + (ny % ty ? 1 : 0));
-    dim3 threads(tx, ty);
-    render<<<blocks, threads>>>(fb, nx, ny, ns, d_camera, (hitable **)d_world);
+    dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
+                cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
+    dim3 threads(cmd_opts.tx, cmd_opts.ty);
+    render<<<blocks, threads>>>(fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, (hitable **)d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -197,7 +190,7 @@ int main()
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
-    writePNGImage(filename, nx, ny, fb);
+    writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
 
     // clean up
     free_world<<<1, 1>>>(d_world);

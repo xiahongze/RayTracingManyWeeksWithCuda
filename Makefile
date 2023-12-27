@@ -15,9 +15,12 @@ SRCS = main.cu
 INCS = vec3.h ray.h hitable.h hitable_list.h sphere.h camera.h material.h interval.h image_utils.h
 
 main: main.o
-	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main main.o
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main main.o cmd_parser.o
 
-main.o: $(SRCS) $(INCS)
+cmd_parser.o: cmd_parser.h cmd_parser.cpp
+	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o cmd_parser.o -c cmd_parser.cpp
+
+main.o: $(SRCS) $(INCS) cmd_parser.o
 	$(NVCC) $(NVCCFLAGS) $(GENCODE_FLAGS) -o main.o -c main.cu
 
 out.jpg: main
@@ -29,9 +32,9 @@ profile_basic: main
 
 # use nvprof --query-metrics
 profile_metrics: main
-	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./main > out.ppm
+	nvprof --metrics achieved_occupancy,inst_executed,inst_fp_32,inst_fp_64,inst_integer ./main
 
 clean:
-	rm -f main main.o out.ppm out.jpg
+	rm -f main main.o out.jpg
 
 PHONY: clean
