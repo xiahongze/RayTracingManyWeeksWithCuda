@@ -7,11 +7,19 @@ class sphere : public hitable
 {
 public:
     __device__ sphere() {}
-    __device__ sphere(vec3 cen, float r, material *m) : center1(cen), radius(r), mat_ptr(m), is_moving(false){};
-    __device__ sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(cen1), radius(r), mat_ptr(m), is_moving(true), center_vec(){};
+    __device__ sphere(vec3 cen, float r, material *m) : center1(cen), radius(r), mat_ptr(m), movable(false){};
+    __device__ sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(cen1), radius(r), mat_ptr(m), movable(true), center_vec(){};
 
     __device__ bool hit(const ray &r, const interval ray_t, hit_record &rec) const override;
     __device__ vec3 get_center(float time) const;
+    __device__ void set_movable(bool is_moving)
+    {
+        this->movable = is_moving;
+    }
+    __device__ void set_center_vec(vec3 center_vec)
+    {
+        this->center_vec = center_vec;
+    }
 
     __device__ ~sphere()
     {
@@ -23,12 +31,12 @@ private:
     vec3 center_vec;
     float radius;
     material *mat_ptr;
-    bool is_moving;
+    bool movable;
 };
 
 __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
 {
-    vec3 center = is_moving ? get_center(r.get_time()) : center1;
+    vec3 center = movable ? get_center(r.get_time()) : center1;
     vec3 oc = r.origin() - center;
     float a = dot(r.direction(), r.direction());
     float half_b = dot(oc, r.direction());

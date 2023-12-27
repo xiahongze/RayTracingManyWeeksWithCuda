@@ -108,20 +108,28 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
     int a = i - 11;
     int b = j - 11;
 
-    vec3 center(a + RND, 0.2, b + RND);
+    float radius = 0.2;
+    vec3 center(a + RND, radius, b + RND);
+
     float choose_mat = RND;
     if (choose_mat < 0.8f)
     {
-        d_list[idx] = new sphere(center, 0.2, new lambertian(vec3::random_cuda(&local_rand_state).as_squared()));
+        d_list[idx] = new sphere(center, radius, new lambertian(vec3::random_cuda(&local_rand_state).as_squared()));
     }
     else if (choose_mat < 0.95f)
     {
-        d_list[idx] = new sphere(center, 0.2,
+        d_list[idx] = new sphere(center, radius,
                                  new metal(1.0f + 0.5f * (vec3::random_cuda(&local_rand_state)), 0.5f * RND));
     }
     else
     {
-        d_list[idx] = new sphere(center, 0.2, new dielectric(1.5));
+        d_list[idx] = new sphere(center, radius, new dielectric(1.5));
+    }
+
+    if (RND < 0.33) // only 1/3 are allowed to move
+    {
+        ((sphere *)d_list[idx])->set_movable(true);
+        ((sphere *)d_list[idx])->set_center_vec(vec3(0, RND * radius * 2, 0));
     }
 
     if (i == 0 && j == 0)
