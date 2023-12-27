@@ -181,7 +181,6 @@ int main()
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
     create_world<<<dim3(22, 22), dim3(1, 1)>>>(d_world, d_list, d_camera, list_size, nx, ny);
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
 
     clock_t start, stop;
     start = clock();
