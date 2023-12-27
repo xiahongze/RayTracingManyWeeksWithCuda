@@ -41,7 +41,7 @@ class lambertian : public material
 {
 public:
     __device__ lambertian(const vec3 &a) : albedo(a) {}
-    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override
     {
         vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
 
@@ -67,7 +67,7 @@ public:
         else
             fuzz = 1;
     }
-    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
         scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere(local_rand_state));
@@ -86,7 +86,7 @@ public:
                             const hit_record &rec,
                             vec3 &attenuation,
                             ray &scattered,
-                            curandState *local_rand_state) const
+                            curandState *local_rand_state) const override
     {
         attenuation = vec3(1.0, 1.0, 1.0);
 
