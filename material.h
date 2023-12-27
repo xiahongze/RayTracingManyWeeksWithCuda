@@ -49,7 +49,7 @@ public:
         if (scatter_direction.near_zero())
             scatter_direction = rec.normal;
 
-        scattered = ray(rec.p, scatter_direction);
+        scattered = ray(rec.p, scatter_direction, r_in.get_time());
         attenuation = albedo;
         return true;
     }
@@ -70,7 +70,7 @@ public:
     __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override
     {
         vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
-        scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere(local_rand_state));
+        scattered = ray(rec.p, reflected + fuzz * vec3::random_in_unit_sphere(local_rand_state), r_in.get_time());
         attenuation = albedo;
         return (dot(scattered.direction(), rec.normal) > 0.0f);
     }
@@ -110,12 +110,12 @@ public:
         bool can_refract = refract(r_in.direction(), outward_normal, ni_over_nt, refracted);
         if (can_refract && curand_uniform(local_rand_state) > schlick(cosine, ref_idx))
         {
-            scattered = ray(rec.p, refracted);
+            scattered = ray(rec.p, refracted, r_in.get_time());
         }
         else
         {
             vec3 reflected = reflect(r_in.direction(), rec.normal);
-            scattered = ray(rec.p, reflected);
+            scattered = ray(rec.p, reflected, r_in.get_time());
         }
 
         return true;
