@@ -196,7 +196,7 @@ __host__ __device__ inline vec3 unit_vector(vec3 v)
     return v / v.length();
 }
 
-__device__ vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
+__device__ inline vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
 {
     vec3 p;
     vec3 offset(1, 1, 0);
@@ -207,7 +207,7 @@ __device__ vec3 vec3::random_in_unit_disk(curandState *local_rand_state)
     return p;
 }
 
-__device__ vec3 vec3::random_in_unit_sphere(curandState *local_rand_state)
+__device__ inline vec3 vec3::random_in_unit_sphere(curandState *local_rand_state)
 {
     vec3 p;
     vec3 offset(1, 1, 1);
