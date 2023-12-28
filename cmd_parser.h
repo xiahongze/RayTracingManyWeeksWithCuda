@@ -1,3 +1,5 @@
+#pragma once
+
 #include "external/cxxopts.hpp"
 
 struct CommandLineOptions
