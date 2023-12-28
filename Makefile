@@ -11,7 +11,7 @@ NVCC_DBG       =
 
 # GENCODE_FLAGS  = -gencode arch=compute_60,code=sm_60
 GENCODE_FLAGS  = 
-NVCCFLAGS      = $(NVCC_DBG) $(GENCODE_FLAGS) -m64 -O3 -MMD -MP
+NVCCFLAGS      = $(NVCC_DBG) $(GENCODE_FLAGS) -m64 -O3 -MMD -MP -rdc=true
 
 # Target binary
 TARGET = main

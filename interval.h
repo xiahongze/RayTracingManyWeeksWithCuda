@@ -46,5 +46,5 @@ public:
     static const interval empty, universe;
 };
 
-const interval interval::empty = interval(+FLT_MAX, -FLT_MAX);
-const interval interval::universe = interval(-FLT_MAX, +FLT_MAX);
+// const interval interval::empty = interval(+FLT_MAX, -FLT_MAX);
+// const interval interval::universe = interval(-FLT_MAX, +FLT_MAX);
