@@ -28,3 +28,13 @@ __device__ bool hitable_list::hit(const ray &r, const interval ray_t, hit_record
     }
     return hit_anything;
 }
+
+__device__ void hitable_list::set_aabb()
+{
+    for (int i = 0; i < list_size; i++)
+    {
+        bbox = aabb(bbox, list[i]->bounding_box());
+    }
+}
+
+__device__ aabb hitable_list::bounding_box() const { return bbox; }

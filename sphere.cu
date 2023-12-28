@@ -2,9 +2,21 @@
 
 __device__ sphere::sphere() {}
 
-__device__ sphere::sphere(vec3 cen, float r, material *m) : center1(cen), radius(r), mat_ptr(m), movable(false) {}
+__device__ sphere::sphere(vec3 cen, float r, material *m) : center1(cen), radius(r), mat_ptr(m), movable(false)
+{
+    auto rvec = vec3(radius, radius, radius);
+    bbox = aabb(center1 - rvec, center1 + rvec);
+}
 
-__device__ sphere::sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(cen1), radius(r), mat_ptr(m), movable(true), center_vec() {}
+__device__ sphere::sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(cen1), radius(r), mat_ptr(m), movable(true)
+{
+    auto rvec = vec3(radius, radius, radius);
+    aabb box1(center1 - rvec, center1 + rvec);
+    aabb box2(cen2 - rvec, cen2 + rvec);
+    bbox = aabb(box1, box2);
+
+    center_vec = cen2 - center1;
+}
 
 __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
 {
@@ -35,6 +47,8 @@ __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec)
 
     return true;
 }
+
+__device__ aabb sphere::bounding_box() const { return bbox; }
 
 __device__ vec3 sphere::get_center(float time) const
 {
