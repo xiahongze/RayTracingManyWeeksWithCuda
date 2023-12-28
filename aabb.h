@@ -9,12 +9,12 @@ class aabb
 public:
     interval x, y, z;
 
-    __device__ aabb() {} // The default AABB is empty, since intervals are empty by default.
+    __host__ __device__ aabb() {} // The default AABB is empty, since intervals are empty by default.
 
-    __device__ aabb(const interval &ix, const interval &iy, const interval &iz)
+    __host__ __device__ aabb(const interval &ix, const interval &iy, const interval &iz)
         : x(ix), y(iy), z(iz) {}
 
-    __device__ aabb(const vec3 &a, const vec3 &b)
+    __host__ __device__ aabb(const vec3 &a, const vec3 &b)
     {
         // Treat the two points a and b as extrema for the bounding box, so we don't require a
         // particular minimum/maximum coordinate order.
@@ -23,14 +23,14 @@ public:
         z = interval(fmin(a.z(), b.z()), fmax(a.z(), b.z()));
     }
 
-    __device__ aabb(const aabb &box0, const aabb &box1)
+    __host__ __device__ aabb(const aabb &box0, const aabb &box1)
     {
         x = interval(box0.x, box1.x);
         y = interval(box0.y, box1.y);
         z = interval(box0.z, box1.z);
     }
 
-    __device__ inline aabb pad()
+    __host__ __device__ inline aabb pad()
     {
         // Return an AABB that has no side narrower than some delta, padding if necessary.
         double delta = 0.0001;
@@ -41,7 +41,7 @@ public:
         return aabb(new_x, new_y, new_z);
     }
 
-    __device__ inline const interval &axis(int n) const
+    __host__ __device__ inline const interval &axis(int n) const
     {
         if (n == 1)
             return y;
@@ -50,7 +50,7 @@ public:
         return x;
     }
 
-    __device__ inline bool hit(const ray &r, interval ray_t) const
+    __host__ __device__ inline bool hit(const ray &r, interval ray_t) const
     {
         for (int a = 0; a < 3; a++)
         {
@@ -79,12 +79,12 @@ public:
     }
 };
 
-__device__ inline aabb operator+(const aabb &bbox, const vec3 &offset)
+__host__ __device__ inline aabb operator+(const aabb &bbox, const vec3 &offset)
 {
     return aabb(bbox.x + offset.x(), bbox.y + offset.y(), bbox.z + offset.z());
 }
 
-__device__ inline aabb operator+(const vec3 &offset, const aabb &bbox)
+__host__ __device__ inline aabb operator+(const vec3 &offset, const aabb &bbox)
 {
     return bbox + offset;
 }

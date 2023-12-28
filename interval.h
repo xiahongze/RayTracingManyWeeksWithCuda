@@ -49,12 +49,12 @@ public:
     static const interval empty, universe;
 };
 
-__device__ inline interval operator+(const interval &ival, float displacement)
+__host__ __device__ inline interval operator+(const interval &ival, float displacement)
 {
     return interval(ival.min + displacement, ival.max + displacement);
 }
 
-__device__ inline interval operator+(float displacement, const interval &ival)
+__host__ __device__ inline interval operator+(float displacement, const interval &ival)
 {
     return ival + displacement;
 }
