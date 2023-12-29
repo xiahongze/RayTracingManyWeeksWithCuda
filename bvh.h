@@ -172,8 +172,10 @@ struct _bvh_node
         bbox = aabb(left->bbox, right->bbox);
     }
 
-    static std::vector<bvh_node> to_linearized_bvh_node(std::shared_ptr<_bvh_node> root)
+    static std::vector<bvh_node> to_linearized_bvh_node(std::shared_ptr<_bvh_node> root, int &tree_height)
     {
+        tree_height = 0; // Initialize tree height
+
         if (root == nullptr)
         {
             return std::vector<bvh_node>();
@@ -181,14 +183,21 @@ struct _bvh_node
 
         std::vector<bvh_node> nodes;
         int index = 0;
-        std::vector<std::tuple<std::shared_ptr<_bvh_node>, int>> stack;
-        stack.push_back(std::make_tuple(root, -1));
+        std::vector<std::tuple<std::shared_ptr<_bvh_node>, int, int>> stack; // Add an integer for depth
+        stack.push_back(std::make_tuple(root, -1, 0));                       // Start with depth 0
 
         while (stack.size() > 0)
         {
             auto node = std::get<0>(stack.back());
             auto parent_index = std::get<1>(stack.back());
+            int depth = std::get<2>(stack.back()); // Current depth
             stack.pop_back();
+
+            // Update tree height if a greater depth is found
+            if (depth > tree_height)
+            {
+                tree_height = depth;
+            }
 
             nodes.push_back(bvh_node(node->data.obj, node->bbox));
             if (parent_index != -1)
@@ -205,11 +214,11 @@ struct _bvh_node
 
             if (node->left != nullptr)
             {
-                stack.push_back(std::make_tuple(node->left, index));
+                stack.push_back(std::make_tuple(node->left, index, depth + 1));
             }
             if (node->right != nullptr)
             {
-                stack.push_back(std::make_tuple(node->right, index));
+                stack.push_back(std::make_tuple(node->right, index, depth + 1));
             }
 
             index++;
@@ -235,7 +244,8 @@ __host__ void build_tree(bvh_node *nodes, int size)
     std::cout << "bvh tree built" << std::endl;
 
     // convert to linearized bvh_node
-    std::vector<bvh_node> linearized_nodes = _bvh_node::to_linearized_bvh_node(root);
+    int tree_height = 0;
+    std::vector<bvh_node> linearized_nodes = _bvh_node::to_linearized_bvh_node(root, tree_height);
 
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
@@ -246,5 +256,6 @@ __host__ void build_tree(bvh_node *nodes, int size)
     }
     std::cout << "size of nodes: " << linearized_nodes.size() << std::endl; // should be "size"
     std::cout << "original size: " << size << std::endl;                    // should be "size
+    std::cout << "tree height: " << tree_height << std::endl;
     std::cout << "bvh tree copied back" << std::endl;
 }
