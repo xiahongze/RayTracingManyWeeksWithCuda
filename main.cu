@@ -185,7 +185,7 @@ int main(int argc, char **argv)
     // create two arrays of bvh_nodes on host and device
     bvh_node *d_bvh_nodes;
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, list_size * sizeof(bvh_node)));
-    bvh_node *h_bvh_nodes = new bvh_node[list_size];
+    bvh_node *h_bvh_nodes = new bvh_node[list_size * 2]; // binary tree
 
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
