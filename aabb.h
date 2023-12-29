@@ -50,7 +50,7 @@ public:
         return x;
     }
 
-    __host__ __device__ inline bool hit(const ray &r, interval ray_t) const
+    __device__ inline bool hit(const ray &r, interval ray_t) const
     {
         for (int a = 0; a < 3; a++)
         {
