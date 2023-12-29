@@ -77,6 +77,25 @@ public:
         }
         return true;
     }
+
+    __host__ __device__ inline int longest_axis() const
+    {
+        float x_size = x.size();
+        float y_size = y.size();
+        float z_size = z.size();
+
+        if (x_size > y_size && x_size > z_size)
+            return 0; // x-axis is longest
+        else if (y_size > z_size)
+            return 1; // y-axis is longest
+        else
+            return 2; // z-axis is longest
+    }
+
+    __host__ __device__ inline vec3 center() const
+    {
+        return vec3((x.min + x.max) * 0.5, (y.min + y.max) * 0.5, (z.min + z.max) * 0.5);
+    }
 };
 
 __host__ __device__ inline aabb operator+(const aabb &bbox, const vec3 &offset)
