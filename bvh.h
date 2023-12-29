@@ -2,6 +2,7 @@
 
 #include "aabb.h"
 #include "hitable.h"
+#include <algorithm>
 #include <vector>
 
 struct bvh_node
@@ -67,7 +68,7 @@ struct bvh_node
         return nodes.size() - 1; // Return index of the new node
     }
 
-    __device__ static bool hit(const bvh_node *nodes, const ray &r, const interval ray_t, hit_record &rec) const
+    __device__ static bool hit(const bvh_node *nodes, const ray &r, const interval ray_t, hit_record &rec)
     {
         // Stack for node indices
         int stack[64]; // Adjust size as needed
@@ -88,12 +89,9 @@ struct bvh_node
                 // If it's a leaf node
                 if (node.left == -1 && node.right == -1)
                 {
-                    hit_record temp_rec;
-                    if (node.data->hit(r, interval(0.001, ray_t.max), temp_rec))
+                    if (node.data->hit(r, ray_t, rec))
                     {
                         hit_anything = true;
-                        ray_t.max = temp_rec.t; // Update the closest hit so far
-                        rec = temp_rec;
                     }
                 }
                 else

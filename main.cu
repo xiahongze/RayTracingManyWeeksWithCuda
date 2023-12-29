@@ -1,3 +1,4 @@
+#include "bvh.h"
 #include "camera.h"
 #include "cmd_parser.h"
 #include "hitable_list.h"
@@ -94,7 +95,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
+__global__ void create_world(bvh_node *d_bvh_nodes, hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -176,10 +177,16 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
     hitable **d_list;
     int list_size = 22 * 22 + 1 + 3;
+
+    // create two arrays of bvh_nodes on host and device
+    bvh_node *d_bvh_nodes;
+    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, list_size * sizeof(bvh_node)));
+    bvh_node *h_bvh_nodes = new bvh_node[list_size];
+
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_world, d_list, d_camera, list_size,
+    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_world, d_list, d_camera, list_size,
                                                cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct);
     checkCudaErrors(cudaGetLastError());
 
@@ -206,7 +213,9 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(d_list));
+    checkCudaErrors(cudaFree(d_bvh_nodes));
     checkCudaErrors(cudaFree(fb));
+    delete[] h_bvh_nodes;
 
     cudaDeviceReset();
 }
