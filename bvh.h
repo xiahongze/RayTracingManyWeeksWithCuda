@@ -172,22 +172,50 @@ struct _bvh_node
         bbox = aabb(left->bbox, right->bbox);
     }
 
-    void to_linearized_bvh_node(std::vector<bvh_node> &nodes)
+    static std::vector<bvh_node> to_linearized_bvh_node(std::shared_ptr<_bvh_node> root)
     {
-        // add self
-        nodes.push_back(bvh_node(bbox));
+        if (root == nullptr)
+        {
+            return std::vector<bvh_node>();
+        }
 
-        // add children
-        if (left != nullptr)
+        std::vector<bvh_node> nodes;
+        int index = 0;
+        std::vector<std::tuple<std::shared_ptr<_bvh_node>, int>> stack;
+        stack.push_back(std::make_tuple(root, -1));
+
+        while (stack.size() > 0)
         {
-            left->to_linearized_bvh_node(nodes);
-            nodes.back().left = nodes.size() - 1;
+            auto node = std::get<0>(stack.back());
+            auto parent_index = std::get<1>(stack.back());
+            stack.pop_back();
+
+            nodes.push_back(bvh_node(node->data.obj, node->bbox));
+            if (parent_index != -1)
+            {
+                if (nodes[parent_index].left == -1)
+                {
+                    nodes[parent_index].left = index;
+                }
+                else
+                {
+                    nodes[parent_index].right = index;
+                }
+            }
+
+            if (node->left != nullptr)
+            {
+                stack.push_back(std::make_tuple(node->left, index));
+            }
+            if (node->right != nullptr)
+            {
+                stack.push_back(std::make_tuple(node->right, index));
+            }
+
+            index++;
         }
-        if (right != nullptr)
-        {
-            right->to_linearized_bvh_node(nodes);
-            nodes.back().right = nodes.size() - 1;
-        }
+
+        return nodes;
     }
 };
 
@@ -207,9 +235,7 @@ __host__ void build_tree(bvh_node *nodes, int size)
     std::cout << "bvh tree built" << std::endl;
 
     // convert to linearized bvh_node
-    std::vector<bvh_node> linearized_nodes;
-    root->to_linearized_bvh_node(linearized_nodes);
-    std::cout << "bvh tree linearized" << std::endl;
+    std::vector<bvh_node> linearized_nodes = _bvh_node::to_linearized_bvh_node(root);
 
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
