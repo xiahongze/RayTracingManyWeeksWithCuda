@@ -46,6 +46,11 @@ struct bvh_node : bvh_data_node
 
     __host__ __device__ bvh_node() {}
 
+    __host__ bvh_node(aabb box)
+    {
+        bbox = box;
+    }
+
     __host__ bvh_node(hitable *object, aabb box)
     {
         obj = object;
@@ -169,15 +174,15 @@ struct _bvh_node
 
     void to_linearized_bvh_node(std::vector<bvh_node> &nodes)
     {
-        // the root node is always at index 0
-        nodes.push_back(bvh_node(data.obj, bbox));
+        // add self
+        nodes.push_back(bvh_node(bbox));
 
+        // add children
         if (left != nullptr)
         {
             left->to_linearized_bvh_node(nodes);
             nodes.back().left = nodes.size() - 1;
         }
-
         if (right != nullptr)
         {
             right->to_linearized_bvh_node(nodes);
@@ -209,7 +214,11 @@ __host__ void build_tree(bvh_node *nodes, int size)
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
     {
+        // print out node info, left right indices
+        std::cout << "node " << i << " left: " << linearized_nodes[i].left << ", right: " << linearized_nodes[i].right << std::endl;
         nodes[i] = linearized_nodes[i];
     }
+    std::cout << "size of nodes: " << linearized_nodes.size() << std::endl; // should be "size"
+    std::cout << "original size: " << size << std::endl;                    // should be "size
     std::cout << "bvh tree copied back" << std::endl;
 }
