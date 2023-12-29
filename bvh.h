@@ -125,35 +125,44 @@ struct _bvh_node
                           : (axis == 1) ? box_y_compare
                                         : box_z_compare;
 
-        size_t object_span = end - start;
+        int object_span = end - start;
+        std::cout << "size: " << src_objects.size() << ", start: " << start << ", end: " << end << ", span: " << object_span << std::endl;
+        auto a = objects[start];
+        std::cout << "a: " << a.bbox.axis(axis).min << ", " << a.bbox.axis(axis).max << std::endl;
 
         if (object_span == 1)
         {
+            // leaf node
             data = objects[start];
+            bbox = objects[start].bbox;
+            return;
         }
-        else if (object_span == 2)
-        {
-            left = std::make_shared<_bvh_node>();
-            right = std::make_shared<_bvh_node>();
-            if (comparator(objects[start], objects[start + 1]))
-            {
-                left->data = objects[start];
-                right->data = objects[start + 1];
-            }
-            else
-            {
-                left->data = objects[start + 1];
-                right->data = objects[start];
-            }
-        }
-        else
-        {
-            std::sort(objects.begin() + start, objects.begin() + end, comparator);
 
-            auto mid = start + object_span / 2;
-            left = std::make_shared<_bvh_node>(objects, start, mid);
-            right = std::make_shared<_bvh_node>(objects, mid, end);
-        }
+        // if (object_span == 2)
+        // {
+        //     left = std::make_shared<_bvh_node>();
+        //     right = std::make_shared<_bvh_node>();
+        //     if (comparator(objects[start], objects[start + 1]))
+        //     {
+        //         left->data = objects[start];
+        //         right->data = objects[start + 1];
+        //     }
+        //     else
+        //     {
+        //         left->data = objects[start + 1];
+        //         right->data = objects[start];
+        //     }
+        // }
+        // else
+        // {
+        std::cout << "sorting " << object_span << " objects" << std::endl;
+        std::sort(objects.begin() + start, objects.begin() + end, comparator);
+        std::cout << "sorted" << std::endl;
+
+        auto mid = start + object_span / 2;
+        left = std::make_shared<_bvh_node>(objects, start, mid);
+        right = std::make_shared<_bvh_node>(objects, mid, end);
+        // }
 
         bbox = aabb(left->bbox, right->bbox);
     }
@@ -186,17 +195,21 @@ __host__ void build_tree(bvh_node *nodes, int size)
     {
         data_nodes.push_back(nodes[i]);
     }
+    std::cout << "data nodes created" << std::endl;
 
     // build the internal tree
     auto root = std::make_shared<_bvh_node>(data_nodes, 0, size);
+    std::cout << "bvh tree built" << std::endl;
 
     // convert to linearized bvh_node
     std::vector<bvh_node> linearized_nodes;
     root->to_linearized_bvh_node(linearized_nodes);
+    std::cout << "bvh tree linearized" << std::endl;
 
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
     {
         nodes[i] = linearized_nodes[i];
     }
+    std::cout << "bvh tree copied back" << std::endl;
 }
