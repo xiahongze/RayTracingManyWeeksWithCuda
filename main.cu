@@ -140,6 +140,10 @@ __global__ void create_world(bvh_node *d_bvh_nodes, hitable_list **d_world, hita
         d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
         d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
+
+        // create bvh_nodes
+        bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
+
         *d_world = new hitable_list(d_list, list_size);
 
         *d_camera = camera();
@@ -189,6 +193,10 @@ int main(int argc, char **argv)
     create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_world, d_list, d_camera, list_size,
                                                cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct);
     checkCudaErrors(cudaGetLastError());
+    // copy bvh_nodes from device to host
+    checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
+    // build bvh tree on host
+    build_tree(h_bvh_nodes, list_size);
 
     clock_t start, stop;
     start = clock();

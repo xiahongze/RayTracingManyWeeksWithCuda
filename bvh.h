@@ -3,20 +3,58 @@
 #include "aabb.h"
 #include "hitable.h"
 #include <algorithm>
+#include <memory>
 #include <vector>
 
-struct bvh_node
+int random_int(int min, int max)
 {
+    // Returns a random integer in [min, max]
+    return min + rand() % (max - min + 1);
+}
+
+struct bvh_data_node
+{
+    hitable *obj;
     aabb bbox;
+};
+
+bool box_compare(
+    const bvh_data_node &a, const bvh_data_node &b, int axis_index)
+{
+    return a.bbox.axis(axis_index).min < b.bbox.axis(axis_index).min;
+}
+
+bool box_x_compare(const bvh_data_node &a, const bvh_data_node &b)
+{
+    return box_compare(a, b, 0);
+}
+
+bool box_y_compare(const bvh_data_node &a, const bvh_data_node &b)
+{
+    return box_compare(a, b, 1);
+}
+
+bool box_z_compare(const bvh_data_node &a, const bvh_data_node &b)
+{
+    return box_compare(a, b, 2);
+}
+
+struct bvh_node : bvh_data_node
+{
     int left = -1;
     int right = -1;
-    hitable *data;
 
     __host__ __device__ bvh_node() {}
 
+    __host__ bvh_node(hitable *object, aabb box)
+    {
+        obj = object;
+        bbox = box;
+    }
+
     __device__ bvh_node(hitable *object)
     {
-        data = object;
+        obj = object;
         bbox = object->bounding_box();
     }
 
@@ -26,46 +64,6 @@ struct bvh_node
         {
             nodes[i] = bvh_node(objects[i]);
         }
-    }
-
-    __host__ static int build(std::vector<bvh_node> &nodes, int start, int end)
-    {
-        // Base case: single node
-        if (end - start == 1)
-        {
-            return start;
-        }
-
-        // Compute the bounding box of all nodes in range
-        aabb box;
-        for (int i = start; i < end; ++i)
-        {
-            box = aabb(box, nodes[i].bbox);
-        }
-
-        // Determine the longest axis (0: x, 1: y, 2: z)
-        int axis = box.longest_axis();
-
-        // Split nodes around the median on the chosen axis
-        int mid = (start + end) / 2;
-        std::nth_element(nodes.begin() + start, nodes.begin() + mid, nodes.begin() + end,
-                         [axis](const bvh_node &a, const bvh_node &b)
-                         {
-                             return a.bbox.center()[axis] < b.bbox.center()[axis];
-                         });
-
-        // Recursively build left and right subtrees
-        int left = build(nodes, start, mid);
-        int right = build(nodes, mid, end);
-
-        // Create new node encompassing both subtrees
-        bvh_node node;
-        node.bbox = aabb(nodes[left].bbox, nodes[right].bbox);
-        node.left = left;
-        node.right = right;
-        nodes.push_back(node);
-
-        return nodes.size() - 1; // Return index of the new node
     }
 
     __device__ static bool hit(const bvh_node *nodes, const ray &r, const interval ray_t, hit_record &rec)
@@ -89,7 +87,7 @@ struct bvh_node
                 // If it's a leaf node
                 if (node.left == -1 && node.right == -1)
                 {
-                    if (node.data->hit(r, ray_t, rec))
+                    if (node.obj->hit(r, ray_t, rec))
                     {
                         hit_anything = true;
                     }
@@ -108,3 +106,97 @@ struct bvh_node
         return hit_anything;
     }
 };
+
+struct _bvh_node
+{
+    aabb bbox;
+    std::shared_ptr<_bvh_node> left;
+    std::shared_ptr<_bvh_node> right;
+    bvh_data_node data;
+
+    _bvh_node() {}
+
+    _bvh_node(const std::vector<bvh_data_node> &src_objects, size_t start, size_t end)
+    {
+        auto objects = src_objects; // Create a modifiable array of the source scene objects
+
+        int axis = random_int(0, 2);
+        auto comparator = (axis == 0)   ? box_x_compare
+                          : (axis == 1) ? box_y_compare
+                                        : box_z_compare;
+
+        size_t object_span = end - start;
+
+        if (object_span == 1)
+        {
+            data = objects[start];
+        }
+        else if (object_span == 2)
+        {
+            left = std::make_shared<_bvh_node>();
+            right = std::make_shared<_bvh_node>();
+            if (comparator(objects[start], objects[start + 1]))
+            {
+                left->data = objects[start];
+                right->data = objects[start + 1];
+            }
+            else
+            {
+                left->data = objects[start + 1];
+                right->data = objects[start];
+            }
+        }
+        else
+        {
+            std::sort(objects.begin() + start, objects.begin() + end, comparator);
+
+            auto mid = start + object_span / 2;
+            left = std::make_shared<_bvh_node>(objects, start, mid);
+            right = std::make_shared<_bvh_node>(objects, mid, end);
+        }
+
+        bbox = aabb(left->bbox, right->bbox);
+    }
+
+    void to_linearized_bvh_node(std::vector<bvh_node> &nodes)
+    {
+        // the root node is always at index 0
+        nodes.push_back(bvh_node(data.obj, bbox));
+
+        if (left != nullptr)
+        {
+            left->to_linearized_bvh_node(nodes);
+            nodes.back().left = nodes.size() - 1;
+        }
+
+        if (right != nullptr)
+        {
+            right->to_linearized_bvh_node(nodes);
+            nodes.back().right = nodes.size() - 1;
+        }
+    }
+};
+
+__host__ void build_tree(bvh_node *nodes, int size)
+{
+    // create a vector of bvh_data_nodes
+    std::vector<bvh_data_node> data_nodes;
+    data_nodes.reserve(size);
+    for (int i = 0; i < size; ++i)
+    {
+        data_nodes.push_back(nodes[i]);
+    }
+
+    // build the internal tree
+    auto root = std::make_shared<_bvh_node>(data_nodes, 0, size);
+
+    // convert to linearized bvh_node
+    std::vector<bvh_node> linearized_nodes;
+    root->to_linearized_bvh_node(linearized_nodes);
+
+    // copy back to nodes
+    for (int i = 0; i < linearized_nodes.size(); ++i)
+    {
+        nodes[i] = linearized_nodes[i];
+    }
+}
