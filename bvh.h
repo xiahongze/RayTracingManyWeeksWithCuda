@@ -131,9 +131,7 @@ struct _bvh_node
                                         : box_z_compare;
 
         int object_span = end - start;
-        std::cout << "size: " << src_objects.size() << ", start: " << start << ", end: " << end << ", span: " << object_span << std::endl;
-        auto a = objects[start];
-        std::cout << "a: " << a.bbox.axis(axis).min << ", " << a.bbox.axis(axis).max << std::endl;
+        // std::cout << "size: " << src_objects.size() << ", start: " << start << ", end: " << end << ", span: " << object_span << std::endl;
 
         if (object_span == 1)
         {
@@ -143,31 +141,10 @@ struct _bvh_node
             return;
         }
 
-        // if (object_span == 2)
-        // {
-        //     left = std::make_shared<_bvh_node>();
-        //     right = std::make_shared<_bvh_node>();
-        //     if (comparator(objects[start], objects[start + 1]))
-        //     {
-        //         left->data = objects[start];
-        //         right->data = objects[start + 1];
-        //     }
-        //     else
-        //     {
-        //         left->data = objects[start + 1];
-        //         right->data = objects[start];
-        //     }
-        // }
-        // else
-        // {
-        std::cout << "sorting " << object_span << " objects" << std::endl;
         std::sort(objects.begin() + start, objects.begin() + end, comparator);
-        std::cout << "sorted" << std::endl;
-
         auto mid = start + object_span / 2;
         left = std::make_shared<_bvh_node>(objects, start, mid);
         right = std::make_shared<_bvh_node>(objects, mid, end);
-        // }
 
         bbox = aabb(left->bbox, right->bbox);
     }
@@ -228,7 +205,7 @@ struct _bvh_node
     }
 };
 
-__host__ void build_tree(bvh_node *nodes, int size)
+__host__ int build_tree(bvh_node *nodes, int size)
 {
     // create a vector of bvh_data_nodes
     std::vector<bvh_data_node> data_nodes;
@@ -237,25 +214,27 @@ __host__ void build_tree(bvh_node *nodes, int size)
     {
         data_nodes.push_back(nodes[i]);
     }
-    std::cout << "data nodes created" << std::endl;
-
     // build the internal tree
     auto root = std::make_shared<_bvh_node>(data_nodes, 0, size);
-    std::cout << "bvh tree built" << std::endl;
+    std::clog << "bvh tree built" << std::endl;
 
     // convert to linearized bvh_node
     int tree_height = 0;
     std::vector<bvh_node> linearized_nodes = _bvh_node::to_linearized_bvh_node(root, tree_height);
+    std::clog << "bvh tree linearized" << std::endl;
+
+    std::clog << "size of nodes: " << linearized_nodes.size() << std::endl; // should be "size"
+    std::clog << "original size: " << size << std::endl;                    // should be "size
+    std::clog << "tree height: " << tree_height << std::endl;
 
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
     {
         // print out node info, left right indices
-        std::cout << "node " << i << " left: " << linearized_nodes[i].left << ", right: " << linearized_nodes[i].right << std::endl;
+        // std::cout << "node " << i << " left: " << linearized_nodes[i].left << ", right: " << linearized_nodes[i].right << std::endl;
         nodes[i] = linearized_nodes[i];
     }
-    std::cout << "size of nodes: " << linearized_nodes.size() << std::endl; // should be "size"
-    std::cout << "original size: " << size << std::endl;                    // should be "size
-    std::cout << "tree height: " << tree_height << std::endl;
-    std::cout << "bvh tree copied back" << std::endl;
+    std::clog << "bvh tree copied back" << std::endl;
+
+    return tree_height;
 }
