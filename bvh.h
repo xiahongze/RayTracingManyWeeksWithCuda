@@ -122,17 +122,14 @@ struct _bvh_node
 
     _bvh_node() {}
 
-    _bvh_node(const std::vector<bvh_data_node> &src_objects, size_t start, size_t end)
+    _bvh_node(std::vector<bvh_data_node> &objects, size_t start, size_t end)
     {
-        auto objects = src_objects; // Create a modifiable array of the source scene objects
-
         int axis = random_int(0, 2);
         auto comparator = (axis == 0)   ? box_x_compare
                           : (axis == 1) ? box_y_compare
                                         : box_z_compare;
 
         int object_span = end - start;
-        // std::cout << "size: " << src_objects.size() << ", start: " << start << ", end: " << end << ", span: " << object_span << std::endl;
 
         if (object_span == 1)
         {
