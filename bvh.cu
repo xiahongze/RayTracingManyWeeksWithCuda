@@ -3,6 +3,8 @@
 #include <memory>
 #include <vector>
 
+#define MAX_TREE_HEIGHT 64
+
 int random_int(int min, int max)
 {
     // Returns a random integer in [min, max]
@@ -142,6 +144,13 @@ __host__ int bvh_node::build_tree(bvh_node *nodes, int size)
     std::clog << "original size: " << size << std::endl;                    // should be "size
     std::clog << "tree height: " << tree_height << std::endl;
 
+    if (tree_height > MAX_TREE_HEIGHT)
+    {
+        std::cerr << "tree height exceeds max tree height " << MAX_TREE_HEIGHT << std::endl;
+        std::cerr << "you may want to increase MAX_TREE_HEIGHT and recompile" << std::endl;
+        exit(1);
+    }
+
     // copy back to nodes
     for (int i = 0; i < linearized_nodes.size(); ++i)
     {
@@ -157,7 +166,7 @@ __host__ int bvh_node::build_tree(bvh_node *nodes, int size)
 __device__ bool bvh_node::hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec)
 {
     // Stack for node indices
-    int stack[64]; // Adjust size as needed
+    int stack[MAX_TREE_HEIGHT]; // Adjust size as needed, Do not use dynamic allocation
     int stackPtr = 0;
 
     // Push index of root node
