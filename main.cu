@@ -198,7 +198,7 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
     std::cout << "bvh_nodes copied to host\n";
     // build bvh tree on host
-    int tree_height = build_tree(h_bvh_nodes, list_size);
+    int tree_height = bvh_node::build_tree(h_bvh_nodes, list_size);
 
     // copy bvh_nodes from host to device
     checkCudaErrors(cudaMemcpy(d_bvh_nodes, h_bvh_nodes, 2 * list_size * sizeof(bvh_node), cudaMemcpyHostToDevice));
