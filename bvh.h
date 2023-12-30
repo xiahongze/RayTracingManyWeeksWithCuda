@@ -71,7 +71,7 @@ struct bvh_node : bvh_data_node
         }
     }
 
-    __device__ static bool hit(const bvh_node *nodes, const ray &r, const interval ray_t, hit_record &rec)
+    __device__ static bool hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec)
     {
         // Stack for node indices
         int stack[64]; // Adjust size as needed
@@ -95,6 +95,7 @@ struct bvh_node : bvh_data_node
                     if (node.obj->hit(r, ray_t, rec))
                     {
                         hit_anything = true;
+                        ray_t = interval(ray_t.min, rec.t);
                     }
                 }
                 else
