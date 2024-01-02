@@ -1,4 +1,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#include "external/stb_image.h"
 #include "external/stb_image_write.h"
 #include "image_utils.h"
 
@@ -19,4 +21,16 @@ void writeJPGImage(const char *filename, int width, int height, vec3 *fb)
 
     stbi_write_jpg(filename, width, height, 3, imageData, 95);
     delete[] imageData;
+}
+
+unsigned char *readImage(const char *filename, int &width, int &height, int &channels)
+{
+    int n;
+    unsigned char *data = stbi_load(filename, &width, &height, &n, channels);
+    if (data == NULL)
+    {
+        std::cerr << "Error: could not load image " << filename << std::endl;
+        exit(1);
+    }
+    return data;
 }
