@@ -18,7 +18,7 @@ __device__ sphere::sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(
     center_vec = cen2 - center1;
 }
 
-__device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
+__device__ bool sphere::hit(const ray &r, const interval &ray_t, hit_record &rec) const
 {
     vec3 center = movable ? get_center(r.get_time()) : center1;
     vec3 oc = r.origin() - center;
