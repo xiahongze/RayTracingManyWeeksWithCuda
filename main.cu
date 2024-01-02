@@ -49,6 +49,8 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    checkCudaErrors(cudaDeviceSynchronize());
+
     // copy bvh_nodes from device to host
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
     // build bvh tree on host
