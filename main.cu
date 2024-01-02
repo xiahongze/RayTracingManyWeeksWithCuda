@@ -1,89 +1,12 @@
 #include "cmd_parser.h"
 #include "image_utils.h"
-#include "material.h"
 #include "render.h"
-#include "sphere.h"
-#include "texture.h"
+#include "scenes.h"
 #include "utils.h"
 #include "vec3.h"
 #include <float.h>
 #include <iostream>
 #include <time.h>
-
-__global__ void
-create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
-{
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i >= 22) || (j >= 22))
-        return;
-    int idx = 4 + j * 22 + i;
-
-    curandState local_rand_state;
-    curand_init(RAND_SEED + idx, 0, 0, &local_rand_state);
-
-    int a = i - 11;
-    int b = j - 11;
-
-    float radius = 0.2;
-    vec3 center(a + RND, radius, b + RND);
-
-    float choose_mat = RND;
-    if (choose_mat < 0.8f)
-    {
-        d_list[idx] = new sphere(center, radius, new lambertian(vec3::random_cuda(&local_rand_state).as_squared()));
-    }
-    else if (choose_mat < 0.95f)
-    {
-        d_list[idx] = new sphere(center, radius,
-                                 new metal(1.0f + 0.5f * (vec3::random_cuda(&local_rand_state)), 0.5f * RND));
-    }
-    else
-    {
-        d_list[idx] = new sphere(center, radius, new dielectric(1.5));
-    }
-
-    if (bounce && RND < bounce_pct) // only 1/3 are allowed to move
-    {
-        ((sphere *)d_list[idx])->set_movable(true);
-        ((sphere *)d_list[idx])->set_center_vec(vec3(0, RND * radius * 2, 0));
-    }
-
-    if (i == 0 && j == 0)
-    {
-        rtapp::texture *ground_texture;
-        if (checkered)
-            ground_texture = new rtapp::checker_texture(0.32, vec3(.2, .3, .1), vec3(.9, .9, .9));
-        else
-            ground_texture = new rtapp::solid_color(vec3(0.5, 0.5, 0.5));
-        d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                               new lambertian(ground_texture));
-        d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
-        d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
-        d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
-
-        // create bvh_nodes
-        bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
-
-        *d_camera = camera();
-        d_camera->lookfrom = vec3(13, 2, 3);
-        d_camera->lookat = vec3(0, 0, 0);
-        d_camera->vup = vec3(0, 1, 0);
-        d_camera->vfov = 30.0;
-        d_camera->image_width = nx;
-        d_camera->image_height = ny;
-        d_camera->defocus_angle = 0.6;
-        d_camera->initialize();
-    }
-}
-
-__global__ void free_objects(hitable **d_list, int size)
-{
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    if (idx >= size)
-        return;
-    delete d_list[idx];
-}
 
 int main(int argc, char **argv)
 {
@@ -109,8 +32,8 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
-                                               cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
+    random_spheres<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
+                                                 cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
     checkCudaErrors(cudaGetLastError());
     // copy bvh_nodes from device to host
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));

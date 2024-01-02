@@ -11,3 +11,11 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
         exit(99);
     }
 }
+
+__global__ void free_objects(hitable **d_list, int size)
+{
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= size)
+        return;
+    delete d_list[idx];
+}

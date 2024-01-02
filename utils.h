@@ -1,5 +1,7 @@
 #pragma once
 
+#include "hitable.h"
+
 #ifndef RAND_SEED
 #define RAND_SEED 1984
 #endif
@@ -10,3 +12,5 @@
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
 
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line);
+
+__global__ void free_objects(hitable **d_list, int size);
