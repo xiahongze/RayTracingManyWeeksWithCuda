@@ -27,28 +27,21 @@ int main(int argc, char **argv)
     bvh_node *h_bvh_nodes, *d_bvh_nodes;
 
     camera *d_camera;
+    checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
 
     int scene = 0;
 
     switch (scene)
     {
     case 0:
-        list_size = 22 * 22 + 1 + 3;
-        tree_size = 2 * list_size;
-        checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
-        h_bvh_nodes = new bvh_node[tree_size]; // binary tree
-
-        checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
-
-        checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-        random_spheres<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
-                                                     cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
-        checkCudaErrors(cudaGetLastError());
+        random_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+                       cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
         break;
     default:
         exit(1);
     }
 
+    checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     // copy bvh_nodes from device to host
