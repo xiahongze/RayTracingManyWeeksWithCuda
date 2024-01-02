@@ -95,7 +95,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
+__global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -135,9 +135,13 @@ __global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 
     if (i == 0 && j == 0)
     {
-        auto checker = new rtapp::checker_texture(0.32, vec3(.2, .3, .1), vec3(.9, .9, .9));
+        rtapp::texture *ground_texture;
+        if (checkered)
+            ground_texture = new rtapp::checker_texture(0.32, vec3(.2, .3, .1), vec3(.9, .9, .9));
+        else
+            ground_texture = new rtapp::solid_color(vec3(0.5, 0.5, 0.5));
         d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                               new lambertian((rtapp::texture *)checker));
+                               new lambertian(ground_texture));
         d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
         d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
@@ -190,7 +194,7 @@ int main(int argc, char **argv)
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
     create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
-                                               cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct);
+                                               cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
     checkCudaErrors(cudaGetLastError());
     // copy bvh_nodes from device to host
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
