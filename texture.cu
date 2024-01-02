@@ -50,7 +50,8 @@ namespace rtapp
 
     __host__ image_texture::~image_texture()
     {
-        delete[] pixel_data;
+        if (pixel_data)
+            delete[] pixel_data;
 
         if (device_ptr)
         {
@@ -68,6 +69,7 @@ namespace rtapp
             checkCudaErrors(cudaMemcpy(device_ptr, this, sizeof(image_texture), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMalloc(&device_ptr->pixel_data, pixel_data_size));
             checkCudaErrors(cudaMemcpy(device_ptr->pixel_data, pixel_data, pixel_data_size, cudaMemcpyHostToDevice));
+            delete[] pixel_data;
         }
         return device_ptr;
     }
