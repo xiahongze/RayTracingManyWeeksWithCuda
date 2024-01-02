@@ -1,4 +1,6 @@
+#include "image_utils.h"
 #include "texture.h"
+#include "utils.h"
 
 namespace rtapp
 {
@@ -37,5 +39,67 @@ namespace rtapp
         bool isEven = (xInteger + yInteger + zInteger) % 2 == 0;
 
         return isEven ? even->value(u, v, p) : odd->value(u, v, p);
+    }
+
+    // image_texture Implementation
+
+    __host__ image_texture::image_texture(const char *filename)
+    {
+        pixel_data = readImage(filename, width, height, channels);
+    }
+
+    __host__ image_texture::~image_texture()
+    {
+        delete[] pixel_data;
+
+        if (device_ptr)
+        {
+            checkCudaErrors(cudaFree(device_ptr->pixel_data));
+            checkCudaErrors(cudaFree(device_ptr));
+        }
+    }
+
+    __host__ image_texture *image_texture::to_device()
+    {
+        if (!device_ptr)
+        {
+            auto pixel_data_size = width * height * channels * sizeof(unsigned char);
+            checkCudaErrors(cudaMalloc(&device_ptr, sizeof(image_texture)));
+            checkCudaErrors(cudaMemcpy(device_ptr, this, sizeof(image_texture), cudaMemcpyHostToDevice));
+            checkCudaErrors(cudaMalloc(&device_ptr->pixel_data, pixel_data_size));
+            checkCudaErrors(cudaMemcpy(device_ptr->pixel_data, pixel_data, pixel_data_size, cudaMemcpyHostToDevice));
+        }
+        return device_ptr;
+    }
+
+    __host__ __device__ vec3 image_texture::value(float u, float v, const vec3 &p) const
+    {
+        // If we have no texture data, then return solid cyan as a debugging aid.
+        if (pixel_data == nullptr)
+        {
+            return vec3(0, 1, 1);
+        }
+
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        u = interval(0, 1).clamp(u);
+        v = 1.0 - interval(0, 1).clamp(v); // Flip V to image coordinates
+
+        auto i = static_cast<int>(u * width);
+        auto j = static_cast<int>(v * height);
+
+        // Clamp integer mapping, since actual coordinates should be less than 1.0
+        if (i >= width)
+        {
+            i = width - 1;
+        }
+        if (j >= height)
+        {
+            j = height - 1;
+        }
+
+        const auto color_scale = 1.0f / 255.0f;
+        auto pixel = pixel_data + j * width * channels + i * channels;
+
+        return vec3(color_scale * pixel[0], color_scale * pixel[1], color_scale * pixel[2]);
     }
 }
