@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
 
     // clean up
-    free_objects<<<dim3(1), dim3(32)>>>(d_list, list_size);
+    free_objects<<<dim3(1), dim3(1)>>>(d_list, list_size);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_bvh_nodes));
