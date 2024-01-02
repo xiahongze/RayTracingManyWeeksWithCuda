@@ -21,25 +21,38 @@ int main(int argc, char **argv)
 
     // make our world of hitables & the camera
     hitable **d_list;
-    int list_size = 22 * 22 + 1 + 3;
+    int list_size, tree_size;
 
     // create two arrays of bvh_nodes on host and device
-    int tree_size = 2 * list_size;
-    bvh_node *d_bvh_nodes;
-    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
-    bvh_node *h_bvh_nodes = new bvh_node[tree_size]; // binary tree
+    bvh_node *h_bvh_nodes, *d_bvh_nodes;
 
-    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
-    checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    random_spheres<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
-                                                 cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
-    checkCudaErrors(cudaGetLastError());
+
+    int scene = 0;
+
+    switch (scene)
+    {
+    case 0:
+        list_size = 22 * 22 + 1 + 3;
+        tree_size = 2 * list_size;
+        checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+        h_bvh_nodes = new bvh_node[tree_size]; // binary tree
+
+        checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
+
+        checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
+        random_spheres<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
+                                                     cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
+        checkCudaErrors(cudaGetLastError());
+        break;
+    default:
+        exit(1);
+    }
+
     // copy bvh_nodes from device to host
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
     // build bvh tree on host
     int tree_height = bvh_node::build_tree(h_bvh_nodes, list_size);
-
     // copy bvh_nodes from host to device
     checkCudaErrors(cudaMemcpy(d_bvh_nodes, h_bvh_nodes, tree_size * sizeof(bvh_node), cudaMemcpyHostToDevice));
 
