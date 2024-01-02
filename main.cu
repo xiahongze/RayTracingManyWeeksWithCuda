@@ -1,101 +1,17 @@
-#include "bvh.h"
-#include "camera.h"
 #include "cmd_parser.h"
 #include "image_utils.h"
-#include "interval.h"
 #include "material.h"
-#include "ray.h"
+#include "render.h"
 #include "sphere.h"
 #include "texture.h"
+#include "utils.h"
 #include "vec3.h"
-#include <curand_kernel.h>
 #include <float.h>
 #include <iostream>
 #include <time.h>
 
-#ifndef RAY_MAX_DEPTH
-#define RAY_MAX_DEPTH 50
-#endif
-
-#ifndef RAND_SEED
-#define RAND_SEED 1984
-#endif
-
-#define RND (curand_uniform(&local_rand_state))
-
-// limited version of checkCudaErrors from helper_cuda.h in CUDA examples
-#define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
-
-void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line)
-{
-    if (result)
-    {
-        std::cerr << "CUDA error = " << static_cast<unsigned int>(result) << " at " << file << ":" << line << " '" << func << "' \n";
-        // Make sure we call CUDA Device Reset before exiting
-        cudaDeviceReset();
-        exit(99);
-    }
-}
-
-// Matching the C++ code would recurse enough into color() calls that
-// it was blowing up the stack, so we have to turn this into a
-// limited-depth loop instead.  Later code in the book limits to a max
-// depth of 50, so we adapt this a few chapters early on the GPU.
-__device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, curandState *local_rand_state)
-{
-    ray cur_ray = r;
-    vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
-    for (int i = 0; i < RAY_MAX_DEPTH; i++)
-    {
-        hit_record rec;
-        if (bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
-        {
-            ray scattered;
-            vec3 attenuation;
-            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
-            {
-                cur_attenuation *= attenuation;
-                cur_ray = scattered;
-            }
-            else
-            {
-                return vec3(0.0, 0.0, 0.0);
-            }
-        }
-        else
-        {
-            vec3 unit_direction = unit_vector(cur_ray.direction());
-            float t = 0.5f * (unit_direction.y() + 1.0f);
-            vec3 c = (1.0f - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-            return cur_attenuation * c;
-        }
-    }
-    return vec3(0.0, 0.0, 0.0); // exceeded recursion
-}
-
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, bvh_node *d_bvh_nodes)
-{
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i >= max_x) || (j >= max_y))
-        return;
-    int pixel_index = j * max_x + i;
-
-    curandState local_rand_state;
-    curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
-
-    vec3 col(0, 0, 0);
-    for (int s = 0; s < ns; s++)
-    {
-        ray r = d_camera->get_ray(i, j, &local_rand_state);
-        col += get_ray_color_pixel(r, d_bvh_nodes, &local_rand_state);
-    }
-    col /= float(ns);
-    col.to_gamma_space();
-    d_fb[pixel_index] = col;
-}
-
-__global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
+__global__ void
+create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
