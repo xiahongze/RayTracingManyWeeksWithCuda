@@ -51,18 +51,22 @@ namespace rtapp
     __host__ image_texture::~image_texture()
     {
         if (pixel_data)
+        {
             delete[] pixel_data;
+            pixel_data = nullptr;
+        }
 
         if (device_ptr)
         {
             checkCudaErrors(cudaFree(device_ptr->pixel_data));
             checkCudaErrors(cudaFree(device_ptr));
+            device_ptr = nullptr;
         }
     }
 
     __host__ image_texture *image_texture::to_device()
     {
-        if (!device_ptr)
+        if (!device_ptr && pixel_data)
         {
             auto pixel_data_size = width * height * channels * sizeof(unsigned char);
             checkCudaErrors(cudaMalloc(&device_ptr, sizeof(image_texture)));
@@ -70,6 +74,7 @@ namespace rtapp
             checkCudaErrors(cudaMalloc(&device_ptr->pixel_data, pixel_data_size));
             checkCudaErrors(cudaMemcpy(device_ptr->pixel_data, pixel_data, pixel_data_size, cudaMemcpyHostToDevice));
             delete[] pixel_data;
+            pixel_data = nullptr;
         }
         return device_ptr;
     }
