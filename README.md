@@ -21,3 +21,11 @@ My simple layman explanation is that,
   - or `malloc` directly in device memory in a kernel
 
 The reason for using `hittable` is that we want to keep this simple interface such that objects of different types can be stored in the same list.
+
+### Bounding Volume Hierarchy (BVH)
+
+Bounding Volume Hierarchy (BVH) is a tree structure commonly used in computer graphics, particularly in the fields of collision detection and ray tracing. This data structure allows for efficient representation and querying of a spatial scene by encapsulating geometry (such as triangles in a mesh) within bounding volumes, typically boxes or spheres. These volumes are organized hierarchically, with each node in the tree containing a volume that encompasses its children, leading to a fast exclusion of large parts of the scene when testing for intersections.
+
+The linearization of BVH for GPU computation is a crucial optimization technique. GPUs, being massively parallel processors, prefer data structures with regular, predictable access patterns. Linearizing a BVH involves flattening the tree structure into a linear array that can be efficiently traversed by the GPU. This transformation typically involves ordering the nodes of the tree in a way that reduces memory jumps during traversal, which is critical for maintaining high performance in GPU-based computations. This linearization enables faster traversal speeds, making it highly suitable for real-time applications like gaming and interactive simulations, where rapid rendering is essential.
+
+Here in this project, an array of `bvh_data_node` containing object information is passed from GPU to CPU and in CPU, we construct a tree of `_bvh_node`. After that, we linearize the tree into an array of `bvh_node` and pass it back to GPU. In GPU, we limit the stack size for non-recursive traversal. Adjust `MAX_TREE_HEIGHT` `in`bvh.h` to change the stack size if needed.

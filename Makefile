@@ -6,7 +6,7 @@ NVPROF         = $(CUDA_PATH)/bin/nvprof
 CXXFLAGS = -Wall -O3 -MMD -MP # -g
 
 # select one of these for Debug vs. Release
-#NVCC_DBG       = -g -G
+# NVCC_DBG       = -g -G
 NVCC_DBG       =
 
 # GENCODE_FLAGS  = -gencode arch=compute_60,code=sm_60

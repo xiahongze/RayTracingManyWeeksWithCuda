@@ -1,6 +1,6 @@
+#include "bvh.h"
 #include "camera.h"
 #include "cmd_parser.h"
-#include "hitable_list.h"
 #include "image_utils.h"
 #include "interval.h"
 #include "material.h"
@@ -40,14 +40,14 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 // it was blowing up the stack, so we have to turn this into a
 // limited-depth loop instead.  Later code in the book limits to a max
 // depth of 50, so we adapt this a few chapters early on the GPU.
-__device__ vec3 get_ray_color_pixel(const ray &r, hitable_list **world, curandState *local_rand_state)
+__device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, curandState *local_rand_state)
 {
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
-        if ((*world)->hit(cur_ray, interval(0.001f, FLT_MAX), rec))
+        if (bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
         {
             ray scattered;
             vec3 attenuation;
@@ -72,7 +72,7 @@ __device__ vec3 get_ray_color_pixel(const ray &r, hitable_list **world, curandSt
     return vec3(0.0, 0.0, 0.0); // exceeded recursion
 }
 
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, hitable_list **d_world)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, bvh_node *d_bvh_nodes)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -87,14 +87,14 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     for (int s = 0; s < ns; s++)
     {
         ray r = d_camera->get_ray(i, j, &local_rand_state);
-        col += get_ray_color_pixel(r, d_world, &local_rand_state);
+        col += get_ray_color_pixel(r, d_bvh_nodes, &local_rand_state);
     }
     col /= float(ns);
     col.to_gamma_space();
     d_fb[pixel_index] = col;
 }
 
-__global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
+__global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -139,7 +139,9 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
         d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
         d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
-        *d_world = new hitable_list(d_list, list_size);
+
+        // create bvh_nodes
+        bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
 
         *d_camera = camera();
         d_camera->lookfrom = vec3(13, 2, 3);
@@ -153,11 +155,12 @@ __global__ void create_world(hitable_list **d_world, hitable **d_list, camera *d
     }
 }
 
-__global__ void free_world(hitable_list **d_world)
+__global__ void free_objects(hitable **d_list, int size)
 {
-    if (threadIdx.x > 0 || blockIdx.x > 0)
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    if (idx >= size)
         return;
-    delete *d_world;
+    delete d_list[idx];
 }
 
 int main(int argc, char **argv)
@@ -172,16 +175,28 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
 
     // make our world of hitables & the camera
-    hitable_list **d_world;
-    checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(hitable_list *)));
     hitable **d_list;
     int list_size = 22 * 22 + 1 + 3;
+
+    // create two arrays of bvh_nodes on host and device
+    int tree_size = 2 * list_size;
+    bvh_node *d_bvh_nodes;
+    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+    bvh_node *h_bvh_nodes = new bvh_node[tree_size]; // binary tree
+
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
-    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_world, d_list, d_camera, list_size,
+    create_world<<<dim3(1, 1), dim3(22, 22)>>>(d_bvh_nodes, d_list, d_camera, list_size,
                                                cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct);
     checkCudaErrors(cudaGetLastError());
+    // copy bvh_nodes from device to host
+    checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
+    // build bvh tree on host
+    int tree_height = bvh_node::build_tree(h_bvh_nodes, list_size);
+
+    // copy bvh_nodes from host to device
+    checkCudaErrors(cudaMemcpy(d_bvh_nodes, h_bvh_nodes, tree_size * sizeof(bvh_node), cudaMemcpyHostToDevice));
 
     clock_t start, stop;
     start = clock();
@@ -190,23 +205,24 @@ int main(int argc, char **argv)
     dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
                 cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
     dim3 threads(cmd_opts.tx, cmd_opts.ty);
-    render<<<blocks, threads>>>(fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, d_world);
+    render<<<blocks, threads>>>(fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, d_bvh_nodes);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     stop = clock();
     double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
-    std::cerr << "took " << timer_seconds << " seconds.\n";
+    std::clog << "took " << timer_seconds << " seconds.\n";
 
     // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
     writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
 
     // clean up
-    free_world<<<1, 1>>>(d_world);
+    free_objects<<<dim3(1), dim3(32)>>>(d_list, list_size);
     checkCudaErrors(cudaFree(d_camera));
-    checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(d_list));
+    checkCudaErrors(cudaFree(d_bvh_nodes));
     checkCudaErrors(cudaFree(fb));
+    delete[] h_bvh_nodes;
 
     cudaDeviceReset();
 }
