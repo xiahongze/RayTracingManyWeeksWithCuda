@@ -2,6 +2,7 @@
 
 #include "hitable.h"
 #include "ray.h"
+#include "texture.h"
 #include "vec3.h"
 
 class material
@@ -14,9 +15,11 @@ class lambertian : public material
 {
 public:
     __device__ lambertian(const vec3 &a);
+    __device__ lambertian(rtapp::texture *a);
+    __device__ ~lambertian();
     __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override;
 
-    vec3 albedo;
+    rtapp::texture *albedo;
 };
 
 class metal : public material

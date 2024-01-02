@@ -20,6 +20,8 @@ public:
 
     __device__ ~sphere();
 
+    __device__ static void get_sphere_uv(const vec3 &p, float &u, float &v);
+
 private:
     vec3 center1;
     vec3 center_vec;

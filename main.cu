@@ -6,6 +6,7 @@
 #include "material.h"
 #include "ray.h"
 #include "sphere.h"
+#include "texture.h"
 #include "vec3.h"
 #include <curand_kernel.h>
 #include <float.h>
@@ -134,8 +135,9 @@ __global__ void create_world(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 
     if (i == 0 && j == 0)
     {
+        auto checker = new rtapp::checker_texture(0.32, vec3(.2, .3, .1), vec3(.9, .9, .9));
         d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                               new lambertian(vec3(0.5, 0.5, 0.5)));
+                               new lambertian((rtapp::texture *)checker));
         d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
         d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
         d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
