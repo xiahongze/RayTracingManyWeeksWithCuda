@@ -48,7 +48,7 @@ namespace rtapp
         pixel_data = readImage(filename, width, height, channels);
     }
 
-    __host__ image_texture::~image_texture()
+    __host__ __device__ image_texture::~image_texture()
     {
         if (pixel_data)
         {
@@ -56,12 +56,12 @@ namespace rtapp
             pixel_data = nullptr;
         }
 
-        if (device_ptr)
-        {
-            checkCudaErrors(cudaFree(device_ptr->pixel_data));
-            checkCudaErrors(cudaFree(device_ptr));
-            device_ptr = nullptr;
-        }
+        // if (device_ptr)
+        // {
+        //     checkCudaErrors(cudaFree(device_ptr->pixel_data));
+        //     checkCudaErrors(cudaFree(device_ptr));
+        //     device_ptr = nullptr;
+        // }
     }
 
     __host__ image_texture *image_texture::to_device()

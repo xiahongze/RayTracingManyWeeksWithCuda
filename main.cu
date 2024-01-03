@@ -29,7 +29,7 @@ int main(int argc, char **argv)
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
 
-    int scene = 0;
+    int scene = 1;
 
     switch (scene)
     {
@@ -37,6 +37,9 @@ int main(int argc, char **argv)
         random_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
                        cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
         break;
+    case 1:
+        earth(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+              cmd_opts.image_width, cmd_opts.image_height);
     default:
         exit(1);
     }

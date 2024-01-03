@@ -42,7 +42,7 @@ namespace rtapp
   public:
     __host__ image_texture(const char *filename);
 
-    __host__ ~image_texture();
+    __host__ __device__ ~image_texture();
 
     __host__ __device__ vec3 value(float u, float v, const vec3 &p) const override;
 
