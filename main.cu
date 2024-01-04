@@ -39,6 +39,10 @@ int main(int argc, char **argv)
         earth(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
               cmd_opts.image_width, cmd_opts.image_height);
         break;
+    case 2:
+        two_perlin_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+                           cmd_opts.image_width, cmd_opts.image_height);
+        break;
     default:
         exit(1);
     }
