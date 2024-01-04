@@ -25,8 +25,8 @@ void writeJPGImage(const char *filename, int width, int height, vec3 *fb)
 
 unsigned char *readImage(const char *filename, int &width, int &height, int &channels)
 {
-    int n;
-    unsigned char *data = stbi_load(filename, &width, &height, &n, channels);
+    // int n;
+    unsigned char *data = stbi_load(filename, &width, &height, &channels, 0);
     if (data == NULL)
     {
         std::cerr << "Error: could not load image " << filename << std::endl;

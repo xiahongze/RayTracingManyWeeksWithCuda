@@ -48,10 +48,12 @@ namespace rtapp
 
     __host__ image_texture *to_device();
 
+    __device__ void set_pixel_data(unsigned char *data);
+
   private:
     int width;
     int height;
-    int channels;
+    int channels = 3;
     unsigned char *pixel_data;
 
     image_texture *device_ptr;

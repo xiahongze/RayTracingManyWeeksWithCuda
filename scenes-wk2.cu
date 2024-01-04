@@ -29,8 +29,14 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 
 void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
+    std::cout << "creating earth scene..." << std::endl;
     auto earth_texture = rtapp::image_texture("assets/earthmap.jpg");
+    std::cout << "earth texture loaded" << std::endl;
+    // auto v = earth_texture.value(0, 0, vec3(0, 0, 0));
+    // std::cout << "earth texture value: " << v << std::endl;
+
     auto d_earth_texture = earth_texture.to_device();
+    std::cout << "earth texture copied to device" << std::endl;
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
@@ -40,4 +46,6 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
 
     create_earth<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_earth_texture, list_size, nx, ny);
+
+    std::cout << "earth scene created" << std::endl;
 }
