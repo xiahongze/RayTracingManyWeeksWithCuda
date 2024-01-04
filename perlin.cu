@@ -1,6 +1,6 @@
 #include "perlin.h"
 
-perlin::perlin()
+__device__ perlin::perlin()
 {
     ranvec = new vec3[point_count];
     curandState local_rand_state;
@@ -14,7 +14,7 @@ perlin::perlin()
     perm_z = perlin_generate_perm(&local_rand_state);
 }
 
-perlin::~perlin()
+__device__ perlin::~perlin()
 {
     delete[] ranvec;
     delete[] perm_x;
@@ -74,7 +74,7 @@ __device__ void perlin::permute(int *p, int n, curandState *local_rand_state)
 {
     for (int i = n - 1; i > 0; i--)
     {
-        int target = (int)(i * curand_uniform(local_rand_state));
+        int target = (int)round(i * curand_uniform(local_rand_state));
         int tmp = p[i];
         p[i] = p[target];
         p[target] = tmp;

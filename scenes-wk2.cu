@@ -69,7 +69,7 @@ __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_lis
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
 
     *d_camera = camera();
-    d_camera->lookfrom = vec3(13, 2, 5);
+    d_camera->lookfrom = vec3(13, 2, 3);
     d_camera->lookat = vec3(0, 0, 0);
     d_camera->vup = vec3(0, 1, 0);
     d_camera->vfov = 20.0;
