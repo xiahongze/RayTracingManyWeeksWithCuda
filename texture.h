@@ -53,7 +53,7 @@ namespace rtapp
     int channels = 3;
     unsigned char *pixel_data;
   };
-  __global__ void update_image_texture(image_texture *texture, unsigned char *pixel_data, int width, int height, int channels);
+  __global__ void update_image_texture(image_texture *d_texture, unsigned char *d_pixel_data, int width, int height, int channels);
 }
 
 // class noise_texture : public texture

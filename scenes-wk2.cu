@@ -35,10 +35,16 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     // auto v = earth_texture.value(0, 0, vec3(0, 0, 0));
     // std::cout << "earth texture value: " << v << std::endl;
 
+    unsigned char *d_data;
+    checkCudaErrors(cudaMalloc((void **)&d_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char)));
+    checkCudaErrors(cudaMemcpy(d_data, earth_texture.pixel_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char), cudaMemcpyHostToDevice));
+
     rtapp::image_texture *d_earth_texture;
-    // checkCudaErrors(cudaMalloc((void **)&d_earth_texture, sizeof(rtapp::image_texture)));
-    // rtapp::update_image_texture<<<1, 1>>>(d_earth_texture, earth_texture.pixel_data, earth_texture.width, earth_texture.height, earth_texture.channels);
-    // std::cout << "earth texture copied to device" << std::endl;
+    checkCudaErrors(cudaMalloc((void **)&d_earth_texture, sizeof(rtapp::image_texture)));
+    rtapp::update_image_texture<<<1, 1>>>(d_earth_texture, d_data, earth_texture.width, earth_texture.height, earth_texture.channels);
+    std::cout << "earth texture copied to device" << std::endl;
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
