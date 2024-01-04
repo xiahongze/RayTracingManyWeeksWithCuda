@@ -36,8 +36,8 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
 
     // copy texture to device
     unsigned char *d_pixel_data;
-    checkCudaErrors(cudaMalloc((void **)&d_pixel_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char)));
-    checkCudaErrors(cudaMemcpy(d_pixel_data, earth_texture.pixel_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMalloc((void **)&d_pixel_data, earth_texture.pixel_data_size));
+    checkCudaErrors(cudaMemcpy(d_pixel_data, earth_texture.pixel_data, earth_texture.pixel_data_size, cudaMemcpyHostToDevice));
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));

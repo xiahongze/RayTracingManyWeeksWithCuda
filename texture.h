@@ -52,8 +52,8 @@ namespace rtapp
     int height;
     int channels = 3;
     unsigned char *pixel_data;
+    int pixel_data_size;
   };
-  __global__ void update_image_texture(image_texture *d_texture, unsigned char *d_pixel_data, int width, int height, int channels);
 }
 
 // class noise_texture : public texture

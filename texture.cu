@@ -4,11 +4,6 @@
 
 namespace rtapp
 {
-    __global__ void update_image_texture(image_texture *d_texture, unsigned char *d_pixel_data, int width, int height, int channels)
-    {
-        *d_texture = image_texture(d_pixel_data, width, height, channels);
-    }
-
     // solid_color Implementation
     __host__ __device__ solid_color::solid_color(vec3 c) : color_value(c) {}
 
@@ -51,6 +46,7 @@ namespace rtapp
     __host__ image_texture::image_texture(const char *filename)
     {
         pixel_data = readImage(filename, width, height, channels);
+        pixel_data_size = width * height * channels * sizeof(unsigned char);
     }
 
     __host__ __device__ image_texture::image_texture(unsigned char *data, int w, int h, int c)
@@ -59,6 +55,7 @@ namespace rtapp
         width = w;
         height = h;
         channels = c;
+        pixel_data_size = width * height * channels * sizeof(unsigned char);
     }
 
     __host__ __device__ image_texture::~image_texture()
