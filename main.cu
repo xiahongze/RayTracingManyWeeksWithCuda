@@ -29,9 +29,7 @@ int main(int argc, char **argv)
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
 
-    int scene = 1;
-
-    switch (scene)
+    switch (cmd_opts.choice)
     {
     case 0:
         random_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
