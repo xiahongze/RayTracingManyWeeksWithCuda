@@ -31,7 +31,20 @@ __device__ vec3 reflect(const vec3 &v, const vec3 &n)
 }
 
 // lambertian
-__device__ lambertian::lambertian(const vec3 &a) : albedo(a) {}
+__device__ lambertian::lambertian(const vec3 &a)
+{
+    albedo = new rtapp::solid_color(a);
+}
+
+__device__ lambertian::lambertian(rtapp::texture *a)
+{
+    albedo = a;
+}
+
+__device__ lambertian::~lambertian()
+{
+    delete albedo;
+}
 
 __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
 {
@@ -42,7 +55,7 @@ __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3
         scatter_direction = rec.normal;
 
     scattered = ray(rec.p, scatter_direction, r_in.get_time());
-    attenuation = albedo;
+    attenuation = albedo->value(rec.u, rec.v, rec.p);
     return true;
 }
 

@@ -18,7 +18,7 @@ __device__ sphere::sphere(vec3 cen1, vec3 cen2, float r, material *m) : center1(
     center_vec = cen2 - center1;
 }
 
-__device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec) const
+__device__ bool sphere::hit(const ray &r, const interval &ray_t, hit_record &rec) const
 {
     vec3 center = movable ? get_center(r.get_time()) : center1;
     vec3 oc = r.origin() - center;
@@ -44,6 +44,7 @@ __device__ bool sphere::hit(const ray &r, const interval ray_t, hit_record &rec)
     rec.p = r.point_at_parameter(rec.t);
     rec.normal = (rec.p - center) / radius;
     rec.mat_ptr = mat_ptr;
+    get_sphere_uv(rec.normal, rec.u, rec.v);
 
     return true;
 }
@@ -70,4 +71,20 @@ __device__ void sphere::set_center_vec(vec3 center_vec)
 __device__ sphere::~sphere()
 {
     delete mat_ptr;
+}
+
+__device__ void sphere::get_sphere_uv(const vec3 &p, float &u, float &v)
+{
+    // p: a given point on the sphere of radius one, centered at the origin.
+    // u: returned value [0,1] of angle around the Y axis from X=-1.
+    // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+    //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+    //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+    //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+    auto theta = acos(-p.y());
+    auto phi = atan2(-p.z(), p.x()) + M_PI;
+
+    u = phi / (2 * M_PI);
+    v = theta / M_PI;
 }

@@ -16,6 +16,7 @@ struct CommandLineOptions
     // week 1 world
     bool bounce;
     float bounce_pct;
+    bool checkered;
 };
 
 CommandLineOptions parse_command_line(int argc, char **argv);
