@@ -1,7 +1,6 @@
 #pragma once
 
-// #include "perlin.h"
-// #include "rtw_stb_image.h"
+#include "perlin.h"
 #include "vec3.h"
 
 namespace rtapp
@@ -9,15 +8,15 @@ namespace rtapp
   class texture
   {
   public:
-    __host__ __device__ virtual vec3 value(float u, float v, const vec3 &p) const = 0;
+    __device__ virtual vec3 value(float u, float v, const vec3 &p) const = 0;
   };
 
   class solid_color : public texture
   {
   public:
-    __host__ __device__ solid_color(vec3 c);
-    __host__ __device__ solid_color(float red, float green, float blue);
-    __host__ __device__ vec3 value(float u, float v, const vec3 &p) const override;
+    __device__ solid_color(vec3 c);
+    __device__ solid_color(float red, float green, float blue);
+    __device__ vec3 value(float u, float v, const vec3 &p) const override;
 
   private:
     vec3 color_value;
@@ -26,10 +25,10 @@ namespace rtapp
   class checker_texture : public texture
   {
   public:
-    __host__ __device__ checker_texture(float _scale, texture *_even, texture *_odd);
-    __host__ __device__ checker_texture(float _scale, vec3 c1, vec3 c2);
-    __host__ __device__ ~checker_texture();
-    __host__ __device__ vec3 value(float u, float v, const vec3 &p) const override;
+    __device__ checker_texture(float _scale, texture *_even, texture *_odd);
+    __device__ checker_texture(float _scale, vec3 c1, vec3 c2);
+    __device__ ~checker_texture();
+    __device__ vec3 value(float u, float v, const vec3 &p) const override;
 
   private:
     float inv_scale;
@@ -42,11 +41,11 @@ namespace rtapp
   public:
     __host__ image_texture(const char *filename);
 
-    __host__ __device__ image_texture(unsigned char *data, int w, int h, int c);
+    __device__ image_texture(unsigned char *data, int w, int h, int c);
 
     __host__ __device__ ~image_texture();
 
-    __host__ __device__ vec3 value(float u, float v, const vec3 &p) const override;
+    __device__ vec3 value(float u, float v, const vec3 &p) const override;
 
     int width;
     int height;
@@ -54,22 +53,18 @@ namespace rtapp
     unsigned char *pixel_data;
     int pixel_data_size;
   };
+
+  class noise_texture : public texture
+  {
+  public:
+    __device__ noise_texture() {}
+
+    __device__ noise_texture(float sc) : scale(sc) {}
+
+    __device__ vec3 value(float u, float v, const vec3 &p) const override;
+
+  private:
+    perlin noise;
+    float scale;
+  };
 }
-
-// class noise_texture : public texture
-// {
-// public:
-//   noise_texture() {}
-
-//   noise_texture(float sc) : scale(sc) {}
-
-//   vec3 value(float u, float v, const vec3 &p) const override
-//   {
-//     auto s = scale * p;
-//     return color(1, 1, 1) * 0.5 * (1 + sin(s.z() + 10 * noise.turb(s)));
-//   }
-
-// private:
-//   perlin noise;
-//   float scale;
-// };
