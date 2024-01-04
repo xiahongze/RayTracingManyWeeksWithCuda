@@ -15,9 +15,9 @@ public:
             ranvec[i] = unit_vector(-1.0f + vec3::random_cuda(&local_rand_state) * 2);
         }
 
-        perm_x = perlin_generate_perm();
-        perm_y = perlin_generate_perm();
-        perm_z = perlin_generate_perm();
+        perm_x = perlin_generate_perm(&local_rand_state);
+        perm_y = perlin_generate_perm(&local_rand_state);
+        perm_z = perlin_generate_perm(&local_rand_state);
     }
 
     __device__ ~perlin()
@@ -71,24 +71,23 @@ private:
     int *perm_y;
     int *perm_z;
 
-    __device__ static int *perlin_generate_perm()
+    __device__ static int *perlin_generate_perm(curandState *local_rand_state)
     {
         auto p = new int[point_count];
 
         for (int i = 0; i < point_count; i++)
             p[i] = i;
 
-        permute(p, point_count);
+        permute(p, point_count, local_rand_state);
 
         return p;
     }
 
-    __device__ static void permute(int *p, int n)
+    __device__ static void permute(int *p, int n, curandState *local_rand_state)
     {
-        curandState local_rand_state;
         for (int i = n - 1; i > 0; i--)
         {
-            int target = (int)(i * curand_uniform(&local_rand_state));
+            int target = (int)(i * curand_uniform(local_rand_state));
             int tmp = p[i];
             p[i] = p[target];
             p[target] = tmp;
