@@ -33,3 +33,10 @@ Here in this project, an array of `bvh_data_node` containing object information 
 ### Dynamical memory allocation in CUDA
 
 In CUDA device functions, we can use `malloc` or `new` to allocate memory dynamically. However, it is advised that we use them with caution because it might cause unexpected race conditions. If you need to do so, do it with one thread for max safety. To avoid these issues, it's generally recommended to pre-allocate memory where possible, and to use shared memory for inter-thread communication within blocks. This approach minimizes the need for dynamic memory allocation and reduces the risk of race conditions.
+
+### Virtual functions & Memory allocation in CUDA
+
+Subclasses need to be created dynamically in device function. If allocated using `cudaMalloc` in host, the pointer is not aligned and later
+it causes issues when accessing members of the class. To avoid this, we need to use `new` to allocate memory for the class in device.
+
+If this is a problem, consider avoiding using an abstract class at all.
