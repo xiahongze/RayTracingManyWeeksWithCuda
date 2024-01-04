@@ -4,14 +4,17 @@
 #include "texture.h"
 #include "utils.h"
 
-__global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, rtapp::image_texture *d_earth_texture, int list_size, int nx, int ny)
+__global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
+                             unsigned char *d_pixel_data, int width, int height, int channels,
+                             int list_size, int nx, int ny)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if ((i > 0) || (j > 0))
         return;
 
-    d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(vec3(0.5, 0.5, 0.5)));
+    auto *earth_texture = new rtapp::image_texture(d_pixel_data, width, height, channels);
+    d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(earth_texture));
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -39,12 +42,12 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     checkCudaErrors(cudaMalloc((void **)&d_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char)));
     checkCudaErrors(cudaMemcpy(d_data, earth_texture.pixel_data, earth_texture.width * earth_texture.height * earth_texture.channels * sizeof(unsigned char), cudaMemcpyHostToDevice));
 
-    rtapp::image_texture *d_earth_texture;
-    checkCudaErrors(cudaMalloc((void **)&d_earth_texture, sizeof(rtapp::image_texture)));
-    rtapp::update_image_texture<<<1, 1>>>(d_earth_texture, d_data, earth_texture.width, earth_texture.height, earth_texture.channels);
-    std::cout << "earth texture copied to device" << std::endl;
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    // rtapp::image_texture *d_earth_texture;
+    // checkCudaErrors(cudaMalloc((void **)&d_earth_texture, sizeof(rtapp::image_texture)));
+    // rtapp::update_image_texture<<<1, 1>>>(d_earth_texture, d_data, earth_texture.width, earth_texture.height, earth_texture.channels);
+    // std::cout << "earth texture copied to device" << std::endl;
+    // checkCudaErrors(cudaGetLastError());
+    // checkCudaErrors(cudaDeviceSynchronize());
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
@@ -53,7 +56,9 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     h_bvh_nodes = new bvh_node[tree_size]; // binary tree
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
 
-    create_earth<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_earth_texture, list_size, nx, ny);
+    create_earth<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
+                                             d_data, earth_texture.width, earth_texture.height, earth_texture.channels,
+                                             list_size, nx, ny);
 
     std::cout << "earth scene created" << std::endl;
 }
