@@ -20,7 +20,7 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
 
     *d_camera = camera();
-    d_camera->lookfrom = vec3(0, 0, 12);
+    d_camera->lookfrom = vec3(-9, -2, -10);
     d_camera->lookat = vec3(0, 0, 0);
     d_camera->vup = vec3(0, 1, 0);
     d_camera->vfov = 20.0;
