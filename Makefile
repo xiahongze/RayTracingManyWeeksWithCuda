@@ -3,15 +3,15 @@ CXX            = g++
 NVCC           = $(CUDA_PATH)/bin/nvcc -ccbin $(CXX)
 NVPROF         = $(CUDA_PATH)/bin/nvprof
 
-CXXFLAGS = -Wall -O3 -MMD -MP # -g
-
 # select one of these for Debug vs. Release
-# NVCC_DBG       = -g -G
-NVCC_DBG       =
+# DBG_FLAG       = -g -G
+DBG_FLAG       = -O3
+
+CXXFLAGS = -Wall $(DBG_FLAG) -MMD -MP
 
 # GENCODE_FLAGS  = -gencode arch=compute_60,code=sm_60
 GENCODE_FLAGS  = 
-NVCCFLAGS      = $(NVCC_DBG) $(GENCODE_FLAGS) -m64 -O3 -MMD -MP -rdc=true
+NVCCFLAGS      = $(DBG_FLAG) $(GENCODE_FLAGS) -m64 -MMD -MP -rdc=true
 
 # Target binary
 TARGET = main
@@ -35,7 +35,7 @@ OBJ = $(OBJ_CXX) $(OBJ_CU)
 all: $(TARGET)
 
 # Linking the target with object files
-$(TARGET): $(OBJ)
+main: $(filter-out test.o, $(OBJ))
 	$(NVCC) $(NVCCFLAGS) -o $@ $^
 
 # Compiling .cc to .o
