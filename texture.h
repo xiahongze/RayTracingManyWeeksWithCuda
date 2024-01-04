@@ -42,22 +42,18 @@ namespace rtapp
   public:
     __host__ image_texture(const char *filename);
 
+    __host__ __device__ image_texture(unsigned char *data, int w, int h, int c);
+
     __host__ __device__ ~image_texture();
 
     __host__ __device__ vec3 value(float u, float v, const vec3 &p) const override;
 
-    __host__ image_texture *to_device();
-
-    __device__ void set_pixel_data(unsigned char *data);
-
-  private:
     int width;
     int height;
     int channels = 3;
     unsigned char *pixel_data;
-
-    image_texture *device_ptr;
   };
+  __global__ void update_image_texture(image_texture *texture, unsigned char *pixel_data, int width, int height, int channels);
 }
 
 // class noise_texture : public texture

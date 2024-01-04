@@ -11,7 +11,7 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
     if ((i > 0) || (j > 0))
         return;
 
-    d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(d_earth_texture));
+    d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(vec3(0.5, 0.5, 0.5)));
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -35,8 +35,10 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     // auto v = earth_texture.value(0, 0, vec3(0, 0, 0));
     // std::cout << "earth texture value: " << v << std::endl;
 
-    auto d_earth_texture = earth_texture.to_device();
-    std::cout << "earth texture copied to device" << std::endl;
+    rtapp::image_texture *d_earth_texture;
+    // checkCudaErrors(cudaMalloc((void **)&d_earth_texture, sizeof(rtapp::image_texture)));
+    // rtapp::update_image_texture<<<1, 1>>>(d_earth_texture, earth_texture.pixel_data, earth_texture.width, earth_texture.height, earth_texture.channels);
+    // std::cout << "earth texture copied to device" << std::endl;
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));

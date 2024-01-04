@@ -4,9 +4,9 @@
 
 namespace rtapp
 {
-    __global__ void update_image_texture(image_texture *texture, unsigned char *pixel_data)
+    __global__ void update_image_texture(image_texture *texture, unsigned char *pixel_data, int width, int height, int channels)
     {
-        texture->set_pixel_data(pixel_data);
+        *texture = image_texture(pixel_data, width, height, channels);
     }
 
     // solid_color Implementation
@@ -53,6 +53,14 @@ namespace rtapp
         pixel_data = readImage(filename, width, height, channels);
     }
 
+    image_texture::image_texture(unsigned char *data, int w, int h, int c)
+    {
+        pixel_data = data;
+        width = w;
+        height = h;
+        channels = c;
+    }
+
     __host__ __device__ image_texture::~image_texture()
     {
         if (pixel_data)
@@ -60,41 +68,6 @@ namespace rtapp
             delete[] pixel_data;
             pixel_data = nullptr;
         }
-
-        // if (device_ptr)
-        // {
-        //     checkCudaErrors(cudaFree(device_ptr->pixel_data));
-        //     checkCudaErrors(cudaFree(device_ptr));
-        //     device_ptr = nullptr;
-        // }
-    }
-
-    __host__ image_texture *image_texture::to_device()
-    {
-        if (!device_ptr && pixel_data)
-        {
-            auto pixel_data_size = width * height * channels * sizeof(unsigned char);
-            checkCudaErrors(cudaMalloc(&device_ptr, sizeof(image_texture)));
-            checkCudaErrors(cudaMemcpy(device_ptr, this, sizeof(image_texture), cudaMemcpyHostToDevice));
-            unsigned char *d_pixel_data;
-            std::cout << "Allocating " << pixel_data_size << " bytes for image texture data" << std::endl;
-            checkCudaErrors(cudaMalloc(&(d_pixel_data), pixel_data_size));
-            std::cout << "Allocated " << pixel_data_size << " bytes for image texture data" << std::endl;
-            checkCudaErrors(cudaMemcpy(d_pixel_data, pixel_data, pixel_data_size, cudaMemcpyHostToDevice));
-            std::cout << "Copied " << pixel_data_size << " bytes for image texture data" << std::endl;
-            update_image_texture<<<1, 1>>>(device_ptr, d_pixel_data);
-            checkCudaErrors(cudaGetLastError());
-            std::cout << "Copied image texture data to device" << std::endl;
-
-            delete[] pixel_data;
-            pixel_data = nullptr;
-        }
-        return device_ptr;
-    }
-
-    __device__ void image_texture::set_pixel_data(unsigned char *data)
-    {
-        pixel_data = data;
     }
 
     __host__ __device__ vec3 image_texture::value(float u, float v, const vec3 &p) const
