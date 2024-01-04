@@ -5,32 +5,32 @@
 namespace rtapp
 {
     // solid_color Implementation
-    __host__ __device__ solid_color::solid_color(vec3 c) : color_value(c) {}
+    __device__ solid_color::solid_color(vec3 c) : color_value(c) {}
 
-    __host__ __device__ solid_color::solid_color(float red, float green, float blue)
+    __device__ solid_color::solid_color(float red, float green, float blue)
         : solid_color(vec3(red, green, blue)) {}
 
-    __host__ __device__ vec3 solid_color::value(float u, float v, const vec3 &p) const
+    __device__ vec3 solid_color::value(float u, float v, const vec3 &p) const
     {
         return color_value;
     }
 
     // checker_texture Implementation
-    __host__ __device__ checker_texture::checker_texture(float _scale, texture *_even, texture *_odd)
+    __device__ checker_texture::checker_texture(float _scale, texture *_even, texture *_odd)
         : inv_scale(1.0 / _scale), even(_even), odd(_odd) {}
 
-    __host__ __device__ checker_texture::checker_texture(float _scale, vec3 c1, vec3 c2)
+    __device__ checker_texture::checker_texture(float _scale, vec3 c1, vec3 c2)
         : inv_scale(1.0 / _scale),
           even(new solid_color(c1)),
           odd(new solid_color(c2)) {}
 
-    __host__ __device__ checker_texture::~checker_texture()
+    __device__ checker_texture::~checker_texture()
     {
         delete even;
         delete odd;
     }
 
-    __host__ __device__ vec3 checker_texture::value(float u, float v, const vec3 &p) const
+    __device__ vec3 checker_texture::value(float u, float v, const vec3 &p) const
     {
         auto xInteger = static_cast<int>(std::floor(inv_scale * p.x()));
         auto yInteger = static_cast<int>(std::floor(inv_scale * p.y()));
@@ -49,7 +49,7 @@ namespace rtapp
         pixel_data_size = width * height * channels * sizeof(unsigned char);
     }
 
-    __host__ __device__ image_texture::image_texture(unsigned char *data, int w, int h, int c)
+    __device__ image_texture::image_texture(unsigned char *data, int w, int h, int c)
     {
         pixel_data = data;
         width = w;
@@ -67,7 +67,7 @@ namespace rtapp
         }
     }
 
-    __host__ __device__ vec3 image_texture::value(float u, float v, const vec3 &p) const
+    __device__ vec3 image_texture::value(float u, float v, const vec3 &p) const
     {
         // If we have no texture data, then return solid cyan as a debugging aid.
         if (pixel_data == nullptr)
@@ -96,5 +96,11 @@ namespace rtapp
         auto pixel = pixel_data + j * width * channels + i * channels;
 
         return vec3(color_scale * pixel[0], color_scale * pixel[1], color_scale * pixel[2]);
+    }
+
+    __device__ vec3 noise_texture::value(float u, float v, const vec3 &p) const
+    {
+        auto s = scale * p;
+        return vec3(1, 1, 1) * 0.5 * (1 + sin(s.z() + 10 * noise.turb(s)));
     }
 }

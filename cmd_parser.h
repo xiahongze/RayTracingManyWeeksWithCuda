@@ -11,6 +11,7 @@ struct CommandLineOptions
     int samples_per_pixel;
     int tx;
     int ty;
+    int choice;
 
     // scene inputs
     // week 1 world
