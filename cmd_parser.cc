@@ -7,7 +7,7 @@ CommandLineOptions parse_command_line(int argc, char **argv)
 
     cxxopts::Options cmd_options("Ray Tracer", "A simple ray tracer");
 
-    const auto scene_option_desc = "choice of scenes:\n0. random spheres\n1. globe\n";
+    const auto scene_option_desc = "choice of scenes:\n0. random spheres\n1. globe\n2. two perlin spheres\n";
     cmd_options.add_options()
         // general inputs
         ("o,output", "Output file (JPEG)", cxxopts::value<std::string>(options.output_file)->default_value("out.jpg")) //
