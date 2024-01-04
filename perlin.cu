@@ -6,7 +6,7 @@ __device__ perlin::perlin()
     curandState local_rand_state;
     for (int i = 0; i < point_count; ++i)
     {
-        ranvec[i] = unit_vector(-1.0f + vec3::random_cuda(&local_rand_state) * 2);
+        ranvec[i] = (-0.5f + vec3::random_cuda(&local_rand_state)) * 2;
     }
 
     perm_x = perlin_generate_perm(&local_rand_state);
