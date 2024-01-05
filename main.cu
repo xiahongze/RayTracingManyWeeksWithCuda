@@ -16,8 +16,9 @@ int main(int argc, char **argv)
     size_t fb_size = num_pixels * sizeof(vec3);
 
     // allocate FB
-    vec3 *fb;
-    checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
+    vec3 *h_fb, *d_fb;
+    h_fb = new vec3[num_pixels];
+    checkCudaErrors(cudaMalloc((void **)&d_fb, fb_size));
 
     // make our world of hitables & the camera
     hitable **d_list;
@@ -52,7 +53,6 @@ int main(int argc, char **argv)
     }
 
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
 
     // copy bvh_nodes from device to host
     checkCudaErrors(cudaMemcpy(h_bvh_nodes, d_bvh_nodes, list_size * sizeof(bvh_node), cudaMemcpyDeviceToHost));
@@ -62,30 +62,32 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMemcpy(d_bvh_nodes, h_bvh_nodes, tree_size * sizeof(bvh_node), cudaMemcpyHostToDevice));
 
     clock_t start, stop;
+    checkCudaErrors(cudaDeviceSynchronize());
     start = clock();
 
     // Render our buffer
     dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
                 cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
     dim3 threads(cmd_opts.tx, cmd_opts.ty);
-    render<<<blocks, threads>>>(fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, d_bvh_nodes);
+    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, d_bvh_nodes);
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
 
+    checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
     double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
     std::clog << "took " << timer_seconds << " seconds.\n";
 
-    // Output FB as Image, allocated with cudaMallocManaged can be directly accessed on host
-    writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, fb);
+    checkCudaErrors(cudaMemcpy(h_fb, d_fb, fb_size, cudaMemcpyDeviceToHost));
+    writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, h_fb);
 
     // clean up
     free_objects<<<dim3(1), dim3(1)>>>(d_list, list_size);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_bvh_nodes));
-    checkCudaErrors(cudaFree(fb));
+    checkCudaErrors(cudaFree(d_fb));
     delete[] h_bvh_nodes;
+    delete[] h_fb;
 
     cudaDeviceReset();
 }
