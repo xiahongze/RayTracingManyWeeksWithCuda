@@ -82,12 +82,7 @@ __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_lis
 
 void two_perlin_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
-    list_size = 2;
-    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
-
-    tree_size = 2 * list_size;
-    h_bvh_nodes = new bvh_node[tree_size]; // binary tree
-    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+    INIT_LIST_AND_TREE(2);
 
     create_two_perlin_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                                           list_size, nx, ny);
@@ -131,12 +126,7 @@ __global__ void create_quads(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 
 void quads(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
-    list_size = 5;
-    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
-
-    tree_size = 2 * list_size;
-    h_bvh_nodes = new bvh_node[tree_size]; // binary tree
-    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+    INIT_LIST_AND_TREE(5);
 
     create_quads<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                              list_size, nx, ny);
