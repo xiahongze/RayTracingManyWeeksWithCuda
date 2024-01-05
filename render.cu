@@ -3,10 +3,6 @@
 #include "utils.h"
 #include "vec3.h"
 
-// Matching the C++ code would recurse enough into color() calls that
-// it was blowing up the stack, so we have to turn this into a
-// limited-depth loop instead.  Later code in the book limits to a max
-// depth of 50, so we adapt this a few chapters early on the GPU.
 __device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, curandState *local_rand_state)
 {
     ray cur_ray = r;
