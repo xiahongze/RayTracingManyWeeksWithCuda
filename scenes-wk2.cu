@@ -1,4 +1,5 @@
 #include "material.h"
+#include "quad.h"
 #include "scenes-wk2.h"
 #include "sphere.h"
 #include "texture.h"
@@ -90,4 +91,53 @@ void two_perlin_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable 
 
     create_two_perlin_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                                           list_size, nx, ny);
+}
+
+__global__ void create_quads(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
+                             int list_size, int nx, int ny)
+{
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    int j = threadIdx.y + blockIdx.y * blockDim.y;
+    if ((i > 0) || (j > 0))
+        return;
+
+    // Materials
+    auto left_red = new lambertian(vec3(1.0, 0.2, 0.2));
+    auto back_green = new lambertian(vec3(0.2, 1.0, 0.2));
+    auto right_blue = new lambertian(vec3(0.2, 0.2, 1.0));
+    auto upper_orange = new lambertian(vec3(1.0, 0.5, 0.0));
+    auto lower_teal = new lambertian(vec3(0.2, 0.8, 0.8));
+
+    // Quads
+    d_list[0] = new quad(vec3(-3, -2, 5), vec3(0, 0, -4), vec3(0, 4, 0), left_red);
+    d_list[1] = new quad(vec3(-2, -2, 0), vec3(4, 0, 0), vec3(0, 4, 0), back_green);
+    d_list[2] = new quad(vec3(3, -2, 1), vec3(0, 0, 4), vec3(0, 4, 0), right_blue);
+    d_list[3] = new quad(vec3(-2, 3, 1), vec3(4, 0, 0), vec3(0, 0, 4), upper_orange);
+    d_list[4] = new quad(vec3(-2, -3, 5), vec3(4, 0, 0), vec3(0, 0, -4), lower_teal);
+
+    // create bvh_nodes
+    bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
+
+    *d_camera = camera();
+    d_camera->lookfrom = vec3(0, 0, 9);
+    d_camera->lookat = vec3(0, 0, 0);
+    d_camera->vup = vec3(0, 1, 0);
+    d_camera->vfov = 80.0;
+    d_camera->image_width = nx;
+    d_camera->image_height = ny;
+    d_camera->defocus_angle = 0.0;
+    d_camera->initialize();
+}
+
+void quads(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+{
+    list_size = 5;
+    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
+
+    tree_size = 2 * list_size;
+    h_bvh_nodes = new bvh_node[tree_size]; // binary tree
+    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+
+    create_quads<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
+                                             list_size, nx, ny);
 }

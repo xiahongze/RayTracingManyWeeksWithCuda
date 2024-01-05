@@ -43,6 +43,9 @@ int main(int argc, char **argv)
         two_perlin_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
                            cmd_opts.image_width, cmd_opts.image_height);
         break;
+    case 3:
+        quads(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+              cmd_opts.image_width, cmd_opts.image_height);
     default:
         exit(1);
     }
