@@ -18,6 +18,12 @@
     h_bvh_nodes = new bvh_node[tree_size]; /* binary tree */                      \
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
 
+#define CHECK_SINGLE_THREAD_BOUNDS()               \
+    int i = threadIdx.x + blockIdx.x * blockDim.x; \
+    int j = threadIdx.y + blockIdx.y * blockDim.y; \
+    if ((i > 0) || (j > 0))                        \
+        return;
+
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line);
 
 __global__ void free_objects(hitable **d_list, int size);

@@ -9,10 +9,7 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
                              unsigned char *d_pixel_data, int width, int height, int channels,
                              int list_size, int nx, int ny)
 {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i > 0) || (j > 0))
-        return;
+    CHECK_SINGLE_THREAD_BOUNDS();
 
     auto earth_texture = new rtapp::image_texture(d_pixel_data, width, height, channels);
     d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(earth_texture));
@@ -57,10 +54,7 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
 __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
                                           int list_size, int nx, int ny)
 {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i > 0) || (j > 0))
-        return;
+    CHECK_SINGLE_THREAD_BOUNDS();
 
     auto perlin_texture = new rtapp::noise_texture(4.0);
     d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(perlin_texture));
@@ -91,10 +85,7 @@ void two_perlin_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable 
 __global__ void create_quads(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
                              int list_size, int nx, int ny)
 {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i > 0) || (j > 0))
-        return;
+    CHECK_SINGLE_THREAD_BOUNDS();
 
     // Materials
     auto left_red = new lambertian(vec3(1.0, 0.2, 0.2));

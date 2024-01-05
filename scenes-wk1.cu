@@ -8,10 +8,7 @@
 __global__ void
 create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i > 0) || (j > 0))
-        return;
+    CHECK_SINGLE_THREAD_BOUNDS();
 
     for (int i = 0; i < 22; i++)
     {
