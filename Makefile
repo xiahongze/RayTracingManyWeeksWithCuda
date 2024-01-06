@@ -3,15 +3,21 @@ CXX            = g++
 NVCC           = $(CUDA_PATH)/bin/nvcc -ccbin $(CXX)
 NVPROF         = $(CUDA_PATH)/bin/nvprof
 
-# select one of these for Debug vs. Release
-# DBG_FLAG       = -g -G
-DBG_FLAG       = -O3
+DEBUG = false
 
-CXXFLAGS = -Wall $(DBG_FLAG) -MMD -MP
+ifeq ($(DEBUG), true)
+	CXXDEBUGFLAG += -g
+	NVDEBUGFLAG += -g -G
+else
+	CXXDEBUGFLAG += -O3
+	NVDEBUGFLAG += -O3
+endif
+
+CXXFLAGS = -Wall $(CXXDEBUGFLAG) -MMD -MP
 
 # GENCODE_FLAGS  = -gencode arch=compute_60,code=sm_60
 GENCODE_FLAGS  = 
-NVCCFLAGS      = $(DBG_FLAG) $(GENCODE_FLAGS) -m64 -MMD -MP -rdc=true
+NVCCFLAGS      = $(NVDEBUGFLAG) $(GENCODE_FLAGS) -m64 -MMD -MP -rdc=true
 
 # Target binary
 TARGET = main

@@ -8,10 +8,7 @@
 __global__ void
 create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-    if ((i > 0) || (j > 0))
-        return;
+    CHECK_SINGLE_THREAD_BOUNDS();
 
     for (int i = 0; i < 22; i++)
     {
@@ -73,12 +70,7 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
 
 void random_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
-    list_size = 22 * 22 + 1 + 3;
-    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
-
-    tree_size = 2 * list_size;
-    h_bvh_nodes = new bvh_node[tree_size]; // binary tree
-    checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
+    INIT_LIST_AND_TREE(22 * 22 + 1 + 3);
 
     create_random_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, list_size, nx, ny, bounce, bounce_pct, checkered);
 }
