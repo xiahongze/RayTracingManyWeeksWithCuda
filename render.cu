@@ -22,17 +22,17 @@ __device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, vec3 &b
         }
 
         ray scattered;
-        // vec3 attenuation;
+        vec3 cur_attenuation;
 
-        if (!rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
+        if (!rec.mat_ptr->scatter(cur_ray, rec, cur_attenuation, scattered, local_rand_state))
         {
             vec3 color_from_emission = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-            final_color += color_from_emission;
+            final_color += color_from_emission * attenuation;
             break;
         }
 
         cur_ray = scattered;
-        // attenuation *= attenuation;
+        attenuation *= cur_attenuation;
     }
     return final_color; // exceeded recursion
 }
