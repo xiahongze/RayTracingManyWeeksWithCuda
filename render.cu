@@ -10,33 +10,31 @@
 __device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, vec3 &backgroound, curandState *local_rand_state)
 {
     ray cur_ray = r;
-    vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
+    vec3 attenuation = vec3(1.0, 1.0, 1.0);
+    vec3 final_color(0, 0, 0);
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
-        if (bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
+        if (!bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
         {
-            ray scattered;
-            vec3 attenuation;
-            if (rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
-            {
-                cur_attenuation *= attenuation;
-                cur_ray = scattered;
-            }
-            else
-            {
-                return vec3(0.0, 0.0, 0.0);
-            }
+            final_color += backgroound * attenuation;
+            break;
         }
-        else
+
+        ray scattered;
+        // vec3 attenuation;
+
+        if (!rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
         {
-            vec3 unit_direction = unit_vector(cur_ray.direction());
-            float t = 0.5f * (unit_direction.y() + 1.0f);
-            vec3 c = (1.0f - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
-            return cur_attenuation * c;
+            vec3 color_from_emission = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+            final_color += color_from_emission;
+            break;
         }
+
+        cur_ray = scattered;
+        // attenuation *= attenuation;
     }
-    return backgroound; // exceeded recursion
+    return final_color; // exceeded recursion
 }
 
 __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camera, bvh_node *d_bvh_nodes)
