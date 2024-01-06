@@ -107,3 +107,20 @@ __device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3
 
     return true;
 }
+
+__device__ diffuse_light::diffuse_light(vec3 c) : emit(new rtapp::solid_color(c)) {}
+
+__device__ diffuse_light::~diffuse_light()
+{
+    delete emit;
+}
+
+__device__ bool diffuse_light::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+{
+    return false;
+}
+
+__device__ vec3 diffuse_light::emitted(float u, float v, const vec3 &p) const
+{
+    return emit->value(u, v, p);
+}
