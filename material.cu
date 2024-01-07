@@ -54,7 +54,7 @@ __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3
 }
 
 // metal
-__device__ metal::metal(const vec3 &a, float f) : albedo(a), fuzz(f < 1 ? f : 1) {}
+__device__ metal::metal(const vec3 &a, float f) : albedo(a.clamp()), fuzz(f < 1 ? f : 1) {}
 
 __device__ bool metal::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
 {
