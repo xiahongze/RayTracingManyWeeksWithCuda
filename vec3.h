@@ -23,11 +23,12 @@ public:
     __host__ __device__ inline float g() const { return e[1]; }
     __host__ __device__ inline float b() const { return e[2]; }
 
-    __host__ __device__ inline void clamp()
+    __host__ __device__ inline vec3 clamp() const
     {
-        e[0] = e[0] < 1.0 ? e[0] : 1.0;
-        e[1] = e[1] < 1.0 ? e[1] : 1.0;
-        e[2] = e[2] < 1.0 ? e[2] : 1.0;
+        auto x = e[0] < 1.0 ? e[0] : 1.0;
+        auto y = e[1] < 1.0 ? e[1] : 1.0;
+        auto z = e[2] < 1.0 ? e[2] : 1.0;
+        return vec3(x, y, z);
     }
 
     __host__ __device__ inline const vec3 &operator+() const { return *this; }
