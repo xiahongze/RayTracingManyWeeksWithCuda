@@ -40,3 +40,13 @@ Subclasses need to be created dynamically in device function. If allocated using
 it causes issues when accessing members of the class. To avoid this, we need to use `new` to allocate memory for the class in device.
 
 If this is a problem, consider avoiding using an abstract class at all.
+
+### Virtual functions & debugging issues
+
+If you are compiling with `-G` flag, you might encounter the following error when using virtual functions.
+
+```
+CUDA error = 719 at main.cu:75 'cudaDeviceSynchronize()'
+```
+
+This gives none information about the error as the problem apparently works fine without `-G` flag. To debug this, you need `-dopt=on` to optimize the code as well as `-G` to insert debug symbols. This is not ideal as removing optimization generally makes code more debuggable. However, in this case, it does the opposite.

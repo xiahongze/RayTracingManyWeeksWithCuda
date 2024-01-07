@@ -122,3 +122,39 @@ void quads(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     create_quads<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                              list_size, nx, ny);
 }
+
+__global__ void create_simple_light(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
+                                    int list_size, int nx, int ny)
+{
+    CHECK_SINGLE_THREAD_BOUNDS();
+
+    auto pertext = new rtapp::noise_texture(4);
+    d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(pertext));
+    d_list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(pertext));
+
+    auto difflight = new diffuse_light(vec3(4, 4, 4));
+    d_list[2] = new sphere(vec3(0, 7, 0), 2, difflight);
+    d_list[3] = new quad(vec3(3, 1, -2), vec3(2, 0, 0), vec3(0, 2, 0), difflight);
+
+    // create bvh_nodes
+    bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
+
+    *d_camera = camera();
+    d_camera->lookfrom = vec3(26, 3, 6);
+    d_camera->lookat = vec3(0, 2, 0);
+    d_camera->vup = vec3(0, 1, 0);
+    d_camera->vfov = 20.0;
+    d_camera->image_width = nx;
+    d_camera->image_height = ny;
+    d_camera->defocus_angle = 0.0;
+    d_camera->background = vec3(0, 0, 0);
+    d_camera->initialize();
+}
+
+void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+{
+    INIT_LIST_AND_TREE(4);
+
+    create_simple_light<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
+                                                    list_size, nx, ny);
+}

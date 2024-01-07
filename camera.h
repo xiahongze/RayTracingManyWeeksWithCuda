@@ -12,8 +12,9 @@ __device__ float degrees_to_radians(float degrees);
 class camera
 {
 public:
-    int image_width = 1200; // Rendered image width in pixel count
-    int image_height = 800; // Rendered image height
+    int image_width = 1200;                   // Rendered image width in pixel count
+    int image_height = 800;                   // Rendered image height
+    vec3 background = vec3(0.70, 0.80, 1.00); // Scene background color
 
     float vfov = 90;                // Vertical view angle (field of view)
     vec3 lookfrom = vec3(0, 0, -1); // Point camera is looking from

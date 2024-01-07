@@ -13,9 +13,10 @@ void writeJPGImage(const char *filename, int width, int height, vec3 *fb)
         for (int i = 0; i < width; i++)
         {
             size_t pixel_index = j * width + i;
-            imageData[index++] = int(255.99 * fmin(fb[pixel_index].r(), 1.0));
-            imageData[index++] = int(255.99 * fmin(fb[pixel_index].g(), 1.0));
-            imageData[index++] = int(255.99 * fmin(fb[pixel_index].b(), 1.0));
+            auto pixel = fb[pixel_index].clamp();
+            imageData[index++] = int(255.99 * pixel.r());
+            imageData[index++] = int(255.99 * pixel.g());
+            imageData[index++] = int(255.99 * pixel.b());
         }
     }
 
