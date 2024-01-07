@@ -23,6 +23,13 @@ public:
     __host__ __device__ inline float g() const { return e[1]; }
     __host__ __device__ inline float b() const { return e[2]; }
 
+    __host__ __device__ inline void clamp()
+    {
+        e[0] = e[0] < 1.0 ? e[0] : 1.0;
+        e[1] = e[1] < 1.0 ? e[1] : 1.0;
+        e[2] = e[2] < 1.0 ? e[2] : 1.0;
+    }
+
     __host__ __device__ inline const vec3 &operator+() const { return *this; }
     __host__ __device__ inline vec3 operator-() const { return vec3(-e[0], -e[1], -e[2]); }
     __host__ __device__ inline float operator[](int i) const { return e[i]; }

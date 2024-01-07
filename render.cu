@@ -52,7 +52,9 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, camera *d_camer
     for (int s = 0; s < ns; s++)
     {
         ray r = d_camera->get_ray(i, j, &local_rand_state);
-        col += get_ray_color_pixel(r, d_bvh_nodes, d_camera->background, &local_rand_state);
+        auto cur_col = get_ray_color_pixel(r, d_bvh_nodes, d_camera->background, &local_rand_state);
+        cur_col.clamp(); // fix out of scale values (correct artifact in the output image)
+        col += cur_col;
     }
     col /= float(ns);
     col.to_gamma_space();
