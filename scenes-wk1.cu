@@ -33,7 +33,7 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
             else if (choose_mat < 0.95f)
             {
                 d_list[idx] = new sphere(center, radius,
-                                         new metal(1.0f + 0.5f * (vec3::random_cuda(&local_rand_state)), 0.5f * RND));
+                                         new metal(1.0f + -0.5f * vec3::random_cuda(&local_rand_state), 0.5f * RND));
             }
             else
             {
