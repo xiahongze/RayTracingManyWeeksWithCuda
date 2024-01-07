@@ -12,7 +12,7 @@ __device__ float schlick(float cosine, float ref_idx)
 // refract
 __device__ vec3 refract(const vec3 &uv, const vec3 &n, float etai_over_etat)
 {
-    auto cos_theta = dot(-uv, n);
+    auto cos_theta = fmin(dot(-uv, n), 1.0f);
     vec3 r_out_perp = etai_over_etat * (uv + cos_theta * n);
     vec3 r_out_parallel = -sqrt(fabs(1.0 - r_out_perp.squared_length())) * n;
     return r_out_perp + r_out_parallel;
@@ -73,7 +73,7 @@ __device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3
     float refraction_ratio = rec.front_face ? (1.0 / ref_idx) : ref_idx;
 
     vec3 unit_direction = unit_vector(r_in.direction());
-    float cos_theta = dot(-unit_direction, rec.normal);
+    float cos_theta = fmin(dot(-unit_direction, rec.normal), 1.0f);
     float sin_theta = sqrt(1.0 - cos_theta * cos_theta);
 
     bool cannot_refract = refraction_ratio * sin_theta > 1.0;
