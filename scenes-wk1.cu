@@ -48,8 +48,18 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
         }
     }
 
-    d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                           new lambertian(vec3(0.5, 0.5, 0.5)));
+    if (checkered)
+    {
+        d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
+                               new lambertian(new rtapp::checker_texture(
+                                   0.8, vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9))));
+    }
+    else
+    {
+
+        d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
+                               new lambertian(vec3(0.5, 0.5, 0.5)));
+    }
     d_list[1] = new sphere(vec3(0, 1, 0), 1.0, new dielectric(1.5));
     d_list[2] = new sphere(vec3(-4, 1, 0), 1.0, new lambertian(vec3(0.4, 0.2, 0.1)));
     d_list[3] = new sphere(vec3(4, 1, 0), 1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
