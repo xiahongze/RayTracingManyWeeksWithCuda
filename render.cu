@@ -10,29 +10,29 @@
 __device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, vec3 &backgroound, curandState *local_rand_state)
 {
     ray cur_ray = r;
-    vec3 attenuation = vec3(1.0, 1.0, 1.0);
+    vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
     vec3 final_color(0, 0, 0);
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
         if (!bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
         {
-            final_color += backgroound * attenuation;
+            final_color += backgroound * cur_attenuation;
             break;
         }
 
         ray scattered;
-        vec3 cur_attenuation;
+        vec3 attenuation;
 
-        if (!rec.mat_ptr->scatter(cur_ray, rec, cur_attenuation, scattered, local_rand_state))
+        if (!rec.mat_ptr->scatter(cur_ray, rec, attenuation, scattered, local_rand_state))
         {
             vec3 color_from_emission = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
-            final_color += color_from_emission * attenuation;
+            final_color += color_from_emission * cur_attenuation;
             break;
         }
 
         cur_ray = scattered;
-        attenuation *= cur_attenuation;
+        cur_attenuation *= attenuation;
     }
     return final_color; // exceeded recursion
 }
