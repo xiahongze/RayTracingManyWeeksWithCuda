@@ -176,8 +176,8 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_list[4] = new quad(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white);
     d_list[5] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0.1), white);
 
-    quad::box(vec3(130, 0, 65), vec3(295, 165, 230), white, d_list, 6);
-    quad::box(vec3(265, 0, 295), vec3(431, 331, 461), white, d_list, 12);
+    d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+    d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
     // TODO: add rotated box, translated box
 
     // create bvh_nodes
@@ -197,7 +197,7 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
 
 void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
-    INIT_LIST_AND_TREE(18);
+    INIT_LIST_AND_TREE(8);
 
     create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                                    list_size, nx, ny);

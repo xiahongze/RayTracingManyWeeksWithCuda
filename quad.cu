@@ -60,7 +60,7 @@ __device__ bool quad::is_interior(float a, float b, hit_record &rec) const
     return true;
 }
 
-__device__ void quad::box(const vec3 &a, const vec3 &b, material *mat, hitable **hitable_list, int start)
+__device__ box::box(const vec3 &a, const vec3 &b, material *mat)
 {
     // Construct the two opposite vertices with the minimum and maximum coordinates.
     auto min = vec3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
@@ -76,10 +76,40 @@ __device__ void quad::box(const vec3 &a, const vec3 &b, material *mat, hitable *
     // giving zigzags we are sure that the vertices are not coplanar
     auto dvec = dx + dy + dz;
 
-    hitable_list[start] = new quad(vec3(min.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, dy, mat);      // front
-    hitable_list[start + 1] = new quad(vec3(max.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), -dz, dy, mat); // right
-    hitable_list[start + 2] = new quad(vec3(max.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), -dx, dy, mat); // back
-    hitable_list[start + 3] = new quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dz, dy, mat);  // left
-    hitable_list[start + 4] = new quad(vec3(min.x(), max.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, -dz, mat); // top
-    hitable_list[start + 5] = new quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dx, dz, mat);  // bottom
+    sides[0] = quad(vec3(min.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, dy, mat);  // front
+    sides[1] = quad(vec3(max.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), -dz, dy, mat); // right
+    sides[2] = quad(vec3(max.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), -dx, dy, mat); // back
+    sides[3] = quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dz, dy, mat);  // left
+    sides[4] = quad(vec3(min.x(), max.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, -dz, mat); // top
+    sides[5] = quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dx, dz, mat);  // bottom
+
+    bbox = aabb(min, max);
+}
+
+__device__ box::~box()
+{
+    delete[] sides;
+    delete mat_ptr;
+}
+
+__device__ bool box::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+{
+    hit_record temp_rec;
+    bool hit_anything = false;
+    auto closest_so_far = ray_t.max;
+
+    for (int i = 0; i < 6; i++)
+    {
+        if (sides[i].hit(r, ray_t, temp_rec))
+        {
+            hit_anything = true;
+            if (temp_rec.t < closest_so_far)
+            {
+                closest_so_far = temp_rec.t;
+                rec = temp_rec;
+            }
+        }
+    }
+
+    return hit_anything;
 }
