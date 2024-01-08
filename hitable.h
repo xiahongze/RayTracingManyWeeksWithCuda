@@ -27,3 +27,42 @@ public:
 
     __device__ virtual aabb bounding_box() const = 0;
 };
+
+class translate : public hitable
+{
+public:
+    __device__ translate(hitable *p, const vec3 &displacement)
+        : object(p), offset(displacement)
+    {
+        bbox = object->bounding_box() + offset;
+    }
+
+    __device__ ~translate();
+
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+
+    __device__ aabb bounding_box() const override;
+
+private:
+    hitable *object;
+    vec3 offset;
+    aabb bbox;
+};
+
+class rotate_y : public hitable
+{
+public:
+    __device__ rotate_y(hitable *p, float angle);
+
+    __device__ ~rotate_y();
+
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+
+    __device__ aabb bounding_box() const override { return bbox; }
+
+private:
+    hitable *object;
+    float sin_theta;
+    float cos_theta;
+    aabb bbox;
+};
