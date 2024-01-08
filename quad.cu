@@ -71,6 +71,9 @@ __device__ void quad::box(const vec3 &a, const vec3 &b, material *mat, hitable *
     auto dz = vec3(0, 0, max.z() - min.z());
 
     curandState local_rand_state;
+    // it is important to zigzag the vertices because
+    // using float we are easily runing into numerical stability issues
+    // giving zigzags we are sure that the vertices are not coplanar
     auto dvec = dx + dy + dz;
 
     hitable_list[start] = new quad(vec3(min.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, dy, mat);      // front
