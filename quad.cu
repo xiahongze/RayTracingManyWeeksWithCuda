@@ -70,10 +70,13 @@ __device__ void quad::box(const vec3 &a, const vec3 &b, material *mat, hitable *
     auto dy = vec3(0, max.y() - min.y(), 0);
     auto dz = vec3(0, 0, max.z() - min.z());
 
-    hitable_list[start] = new quad(vec3(min.x(), min.y(), max.z()), dx, dy, mat);      // front
-    hitable_list[start + 1] = new quad(vec3(max.x(), min.y(), max.z()), -dz, dy, mat); // right
-    hitable_list[start + 2] = new quad(vec3(max.x(), min.y(), min.z()), -dx, dy, mat); // back
-    hitable_list[start + 3] = new quad(vec3(min.x(), min.y(), min.z()), dz, dy, mat);  // left
-    hitable_list[start + 4] = new quad(vec3(min.x(), max.y(), max.z()), dx, -dz, mat); // top
-    hitable_list[start + 5] = new quad(vec3(min.x(), min.y(), min.z()), dx, dz, mat);  // bottom
+    curandState local_rand_state;
+    auto dvec = dx + dy + dz;
+
+    hitable_list[start] = new quad(vec3(min.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, dy, mat);      // front
+    hitable_list[start + 1] = new quad(vec3(max.x(), min.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), -dz, dy, mat); // right
+    hitable_list[start + 2] = new quad(vec3(max.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), -dx, dy, mat); // back
+    hitable_list[start + 3] = new quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dz, dy, mat);  // left
+    hitable_list[start + 4] = new quad(vec3(min.x(), max.y(), max.z()).zigzag(0.01, dvec, &local_rand_state), dx, -dz, mat); // top
+    hitable_list[start + 5] = new quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, &local_rand_state), dx, dz, mat);  // bottom
 }
