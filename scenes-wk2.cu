@@ -176,9 +176,10 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_list[4] = new quad(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white);
     d_list[5] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0.1), white);
 
-    d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
-    d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
-    // TODO: add rotated box, translated box
+    auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+    auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white);
+    d_list[6] = new translate(new rotate_y(box1, 15), vec3(265, 0, 295));
+    d_list[7] = new translate(new rotate_y(box2, -18), vec3(130, 0, 65));
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
