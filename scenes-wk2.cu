@@ -158,3 +158,56 @@ void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_l
     create_simple_light<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                                     list_size, nx, ny);
 }
+
+__global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
+                                   int list_size, int nx, int ny, bool rotate_translate)
+{
+    CHECK_SINGLE_THREAD_BOUNDS();
+
+    auto red = new lambertian(vec3(0.65, 0.05, 0.05));
+    auto white = new lambertian(vec3(0.73, 0.73, 0.73));
+    auto green = new lambertian(vec3(0.12, 0.45, 0.15));
+    auto light = new diffuse_light(vec3(15, 15, 15));
+
+    d_list[0] = new quad(vec3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green);
+    d_list[1] = new quad(vec3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red);
+    d_list[2] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), light);
+    d_list[3] = new quad(vec3(0, 0, 0), vec3(555, 0, 0), vec3(0, 0, 555), white);
+    d_list[4] = new quad(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white);
+    d_list[5] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0.1), white);
+
+    if (rotate_translate)
+    {
+        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+        auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white);
+        d_list[6] = new translate(new rotate_y(box1, 15), vec3(265, 0, 295));
+        d_list[7] = new translate(new rotate_y(box2, -18), vec3(130, 0, 65));
+    }
+    else
+    {
+        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
+    }
+
+    // create bvh_nodes
+    bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
+
+    *d_camera = camera();
+    d_camera->lookfrom = vec3(278, 278, -800);
+    d_camera->lookat = vec3(278, 278, 0);
+    d_camera->vup = vec3(0, 1, 0);
+    d_camera->vfov = 40.0;
+    d_camera->image_width = nx;
+    d_camera->image_height = ny;
+    d_camera->defocus_angle = 0.0;
+    d_camera->background = vec3(0, 0, 0);
+    d_camera->initialize();
+}
+
+void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool rotate_translate)
+{
+    INIT_LIST_AND_TREE(8);
+
+    create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
+                                                   list_size, nx, ny, rotate_translate);
+}

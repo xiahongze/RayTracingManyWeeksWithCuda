@@ -27,3 +27,5 @@
 void check_cuda(cudaError_t result, char const *const func, const char *const file, int const line);
 
 __global__ void free_objects(hitable **d_list, int size);
+
+__device__ float degrees_to_radians(float degrees);

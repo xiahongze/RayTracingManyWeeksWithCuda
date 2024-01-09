@@ -23,3 +23,8 @@ __global__ void free_objects(hitable **d_list, int size)
         }
     }
 }
+
+__device__ float degrees_to_radians(float degrees)
+{
+    return degrees * ((float)M_PI) / 180.0f;
+}

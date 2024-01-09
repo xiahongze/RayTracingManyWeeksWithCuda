@@ -18,9 +18,10 @@ CommandLineOptions parse_command_line(int argc, char **argv)
         ("ty", "Threads in y direction", cxxopts::value<int>(options.ty)->default_value("4"))                          //
         ("c,choice", scene_option_desc, cxxopts::value<int>(options.choice)->default_value("0"))
         // week 1 scene options
-        ("wk1-bounce", "Enable bouncing spheres", cxxopts::value<bool>(options.bounce)->default_value("false"))                //
-        ("wk1-bounce-pct", "Percentage of bouncing spheres", cxxopts::value<float>(options.bounce_pct)->default_value("0.33")) //
-        ("wk1-checker", "Use checker board ground", cxxopts::value<bool>(options.checkered)->default_value("false"))           //
+        ("wk1-bounce", "Enable bouncing spheres", cxxopts::value<bool>(options.bounce)->default_value("false"))                                           //
+        ("wk1-bounce-pct", "Percentage of bouncing spheres", cxxopts::value<float>(options.bounce_pct)->default_value("0.33"))                            //
+        ("wk1-checker", "Use checker board ground", cxxopts::value<bool>(options.checkered)->default_value("false"))                                      //
+        ("wk2-rotate-translate", "Whether to rotate and translate the boxes", cxxopts::value<bool>(options.cornell_box_rt_trans)->default_value("false")) //
         ("help", "Print help");
 
     try

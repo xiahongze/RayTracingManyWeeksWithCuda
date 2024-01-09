@@ -61,6 +61,15 @@ public:
         return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
     }
 
+    __device__ inline vec3 zigzag(float pct, const vec3 &dv, curandState *local_rand_state) const
+    {
+        auto rvec = vec3::random_cuda(local_rand_state);
+        return vec3(
+            e[0] + dv.e[0] * pct * (rvec.e[0] * 2.0f - 1.0f),
+            e[1] + dv.e[1] * pct * (rvec.e[1] * 2.0f - 1.0f),
+            e[2] + dv.e[2] * pct * (rvec.e[2] * 2.0f - 1.0f));
+    }
+
     __device__ static vec3 random_cuda(curandState *local_rand_state)
     {
         return vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state));
