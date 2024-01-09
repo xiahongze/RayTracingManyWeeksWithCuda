@@ -1,3 +1,4 @@
+#include "constant_medium.h"
 #include "material.h"
 #include "quad.h"
 #include "scenes-wk2.h"
@@ -185,7 +186,8 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     }
     else
     {
-        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        // d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[6] = new constant_medium(new box(vec3(130, 0, 65), vec3(295, 165, 230), white), 0.01, vec3(0.12, 0.45, 0.15));
         d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
     }
 
