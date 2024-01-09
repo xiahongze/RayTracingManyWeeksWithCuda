@@ -104,3 +104,15 @@ __device__ vec3 diffuse_light::emitted(float u, float v, const vec3 &p) const
 {
     return emit->value(u, v, p);
 }
+
+isotropic::~isotropic()
+{
+    delete albedo;
+}
+
+bool isotropic::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+{
+    scattered = ray(rec.p, vec3::random_unit_vector(local_rand_state), r_in.get_time());
+    attenuation = albedo->value(rec.u, rec.v, rec.p);
+    return true;
+}
