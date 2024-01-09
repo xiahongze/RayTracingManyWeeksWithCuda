@@ -100,14 +100,11 @@ __device__ bool box::hit(const ray &r, const interval &ray_t, hit_record &rec) c
 
     for (int i = 0; i < 6; i++)
     {
-        if (sides[i].hit(r, ray_t, temp_rec))
+        if (sides[i].hit(r, interval(ray_t.min, closest_so_far), temp_rec))
         {
             hit_anything = true;
-            if (temp_rec.t < closest_so_far)
-            {
-                closest_so_far = temp_rec.t;
-                rec = temp_rec;
-            }
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
         }
     }
 
