@@ -47,6 +47,16 @@ public:
     }
 
     static const interval empty, universe;
+
+    __host__ __device__ inline static interval get_universe()
+    {
+        return interval(+FLT_MAX, -FLT_MAX);
+    }
+
+    __host__ __device__ inline static interval get_empty()
+    {
+        return interval(-FLT_MAX, +FLT_MAX);
+    }
 };
 
 __host__ __device__ inline interval operator+(const interval &ival, float displacement)
