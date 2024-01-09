@@ -10,6 +10,12 @@ __device__ constant_medium::constant_medium(hitable *b, float d, vec3 c)
 {
 }
 
+__device__ constant_medium::~constant_medium()
+{
+    delete boundary;
+    delete phase_function;
+}
+
 __device__ bool constant_medium::hit(const ray &r, const interval &ray_t, hit_record &rec) const
 {
     hit_record rec1, rec2;
