@@ -104,3 +104,70 @@ __device__ vec3 diffuse_light::emitted(float u, float v, const vec3 &p) const
 {
     return emit->value(u, v, p);
 }
+
+__device__ material::material(lambertian *l)
+{
+    lamb = l;
+    type = LAMBERTIAN;
+}
+
+__device__ material::material(metal *m)
+{
+    met = m;
+    type = METAL;
+}
+
+__device__ material::material(dielectric *d)
+{
+    die = d;
+    type = DIELECTRIC;
+}
+
+__device__ material::material(diffuse_light *d)
+{
+    diff = d;
+    type = DIFFUSE_LIGHT;
+}
+
+__device__ material::~material()
+{
+    switch (type)
+    {
+    case LAMBERTIAN:
+        delete lamb;
+        break;
+    case METAL:
+        delete met;
+        break;
+    case DIELECTRIC:
+        delete die;
+        break;
+    case DIFFUSE_LIGHT:
+        delete diff;
+        break;
+    }
+}
+
+__device__ bool material::scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const
+{
+    switch (type)
+    {
+    case LAMBERTIAN:
+        return lamb->scatter(r_in, rec, attenuation, scattered, local_rand_state);
+    case METAL:
+        return met->scatter(r_in, rec, attenuation, scattered, local_rand_state);
+    case DIELECTRIC:
+        return die->scatter(r_in, rec, attenuation, scattered, local_rand_state);
+    case DIFFUSE_LIGHT:
+        return diff->scatter(r_in, rec, attenuation, scattered, local_rand_state);
+    }
+    return false;
+}
+
+__device__ vec3 material::emitted(float u, float v, const vec3 &p) const
+{
+    if (type == DIFFUSE_LIGHT)
+        return diff->emitted(u, v, p);
+    else
+        return vec3(0.0f, 0.0f, 0.0f);
+}
