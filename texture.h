@@ -17,15 +17,15 @@ private:
 class checker_texture
 {
 public:
-  __device__ checker_texture(float _scale, texture *_even, texture *_odd);
+  __device__ checker_texture(float _scale, solid_color *_even, solid_color *_odd);
   __device__ checker_texture(float _scale, vec3 c1, vec3 c2);
   __device__ ~checker_texture();
   __device__ vec3 value(float u, float v, const vec3 &p) const;
 
 private:
   float inv_scale;
-  texture *even;
-  texture *odd;
+  solid_color *even;
+  solid_color *odd;
 };
 
 class image_texture

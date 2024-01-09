@@ -16,7 +16,7 @@ namespace rtapp
     }
 
     // checker_texture Implementation
-    __device__ checker_texture::checker_texture(float _scale, texture *_even, texture *_odd)
+    __device__ checker_texture::checker_texture(float _scale, solid_color *_even, solid_color *_odd)
         : inv_scale(1.0 / _scale), even(_even), odd(_odd) {}
 
     __device__ checker_texture::checker_texture(float _scale, vec3 c1, vec3 c2)
@@ -102,5 +102,67 @@ namespace rtapp
     {
         auto s = scale * p;
         return vec3(1, 1, 1) * 0.5 * (1 + sin(s.z() + 10 * noise.turb(s)));
+    }
+}
+
+__device__ app_texture::app_texture(solid_color *s)
+{
+    type = texture_type::SOLID_COLOR;
+    solid = s;
+}
+
+__device__ app_texture::app_texture(checker_texture *c)
+{
+    type = texture_type::CHECKER_TEXTURE;
+    checker = c;
+}
+
+__device__ app_texture::app_texture(image_texture *i)
+{
+    type = texture_type::IMAGE_TEXTURE;
+    image = i;
+}
+
+__device__ app_texture::app_texture(noise_texture *n)
+{
+    type = texture_type::NOISE_TEXTURE;
+    noise = n;
+}
+
+__device__ vec3 app_texture::value(float u, float v, const vec3 &p) const
+{
+    switch (type)
+    {
+    case texture_type::SOLID_COLOR:
+        return solid->value(u, v, p);
+    case texture_type::CHECKER_TEXTURE:
+        return checker->value(u, v, p);
+    case texture_type::IMAGE_TEXTURE:
+        return image->value(u, v, p);
+    case texture_type::NOISE_TEXTURE:
+        return noise->value(u, v, p);
+    default:
+        return vec3(0, 0, 0);
+    }
+}
+
+__device__ app_texture::~app_texture()
+{
+    switch (type)
+    {
+    case texture_type::SOLID_COLOR:
+        delete solid;
+        break;
+    case texture_type::CHECKER_TEXTURE:
+        delete checker;
+        break;
+    case texture_type::IMAGE_TEXTURE:
+        delete image;
+        break;
+    case texture_type::NOISE_TEXTURE:
+        delete noise;
+        break;
+    default:
+        break;
     }
 }
