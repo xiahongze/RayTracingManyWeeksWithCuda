@@ -27,7 +27,7 @@ __device__ vec3 reflect(const vec3 &v, const vec3 &n)
 // lambertian
 __device__ lambertian::lambertian(const vec3 &a)
 {
-    albedo = new solid_color(a);
+    albedo = new app_texture(new solid_color(a));
 }
 
 __device__ lambertian::lambertian(app_texture *a)
@@ -88,7 +88,7 @@ __device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, vec3
     return true;
 }
 
-__device__ diffuse_light::diffuse_light(vec3 c) : emit(new solid_color(c)) {}
+__device__ diffuse_light::diffuse_light(vec3 c) : emit(new app_texture(new solid_color(c))) {}
 
 __device__ diffuse_light::~diffuse_light()
 {

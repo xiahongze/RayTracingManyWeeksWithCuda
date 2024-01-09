@@ -1,7 +1,6 @@
 #pragma once
 
 #include "aabb.h"
-#include "hitable.h"
 #include "material.h"
 #include "vec3.h"
 

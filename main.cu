@@ -36,26 +36,26 @@ int main(int argc, char **argv)
         random_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
                        cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
         break;
-    case 1:
-        earth(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-              cmd_opts.image_width, cmd_opts.image_height);
-        break;
-    case 2:
-        two_perlin_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                           cmd_opts.image_width, cmd_opts.image_height);
-        break;
-    case 3:
-        quads(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-              cmd_opts.image_width, cmd_opts.image_height);
-        break;
-    case 4:
-        simple_light(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                     cmd_opts.image_width, cmd_opts.image_height);
-        break;
-    case 5:
-        cornell_box(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                    cmd_opts.image_width, cmd_opts.image_height, cmd_opts.cornell_box_rt_trans);
-        break;
+    // case 1:
+    //     earth(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+    //           cmd_opts.image_width, cmd_opts.image_height);
+    //     break;
+    // case 2:
+    //     two_perlin_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+    //                        cmd_opts.image_width, cmd_opts.image_height);
+    //     break;
+    // case 3:
+    //     quads(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+    //           cmd_opts.image_width, cmd_opts.image_height);
+    //     break;
+    // case 4:
+    //     simple_light(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+    //                  cmd_opts.image_width, cmd_opts.image_height);
+    //     break;
+    // case 5:
+    //     cornell_box(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+    //                 cmd_opts.image_width, cmd_opts.image_height, cmd_opts.cornell_box_rt_trans);
+    //     break;
     default:
         exit(1);
     }

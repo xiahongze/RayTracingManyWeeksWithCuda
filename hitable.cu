@@ -102,23 +102,23 @@
 //     return true;
 // }
 
-__device__ hitable::hitable(sphere *sphere)
-{
-    this->shape = shape_type::SPHERE;
-    this->sphere = sphere;
-}
+// __device__ hitable::hitable(sphere *sphere)
+// {
+//     this->shape = shape_type::SPHERE;
+//     this->sphere = sphere;
+// }
 
-__device__ hitable::hitable(box *box)
-{
-    this->shape = shape_type::BOX;
-    this->box = box;
-}
+// __device__ hitable::hitable(box *box)
+// {
+//     this->shape = shape_type::BOX;
+//     this->box = box;
+// }
 
-__device__ hitable::hitable(quad *quad)
-{
-    this->shape = shape_type::QUAD;
-    this->quad = quad;
-}
+// __device__ hitable::hitable(quad *quad)
+// {
+//     this->shape = shape_type::QUAD;
+//     this->quad = quad;
+// }
 
 __device__ hitable::~hitable()
 {

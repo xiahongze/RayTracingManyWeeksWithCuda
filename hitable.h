@@ -17,9 +17,9 @@ enum class shape_type
 class hitable
 {
 public:
-    __device__ hitable(sphere *sphere);
-    __device__ hitable(box *box);
-    __device__ hitable(quad *quad);
+    __device__ hitable(sphere *sphere) : shape(shape_type::SPHERE), sphere(sphere){};
+    __device__ hitable(box *box) : shape(shape_type::BOX), box(box){};
+    __device__ hitable(quad *quad) : shape(shape_type::QUAD), quad(quad){};
     __device__ ~hitable();
 
     __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const;

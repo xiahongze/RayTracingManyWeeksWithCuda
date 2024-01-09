@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hitable.h"
+#include "hit_record.h"
 #include "ray.h"
 #include "texture.h"
 #include "vec3.h"
