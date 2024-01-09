@@ -11,7 +11,7 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
-    auto earth_texture = new rtapp::image_texture(d_pixel_data, width, height, channels);
+    auto earth_texture = new image_texture(d_pixel_data, width, height, channels);
     d_list[0] = new sphere(vec3(0, 0, 0), 2.0, new lambertian(earth_texture));
 
     // create bvh_nodes
@@ -30,7 +30,7 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
 
 void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
-    auto earth_texture = rtapp::image_texture("assets/earthmap.jpg");
+    auto earth_texture = image_texture("assets/earthmap.jpg");
 
     // copy texture to device
     unsigned char *d_pixel_data;
@@ -56,7 +56,7 @@ __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_lis
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
-    auto perlin_texture = new rtapp::noise_texture(4.0);
+    auto perlin_texture = new noise_texture(4.0);
     d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(perlin_texture));
     d_list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(perlin_texture));
 
@@ -128,7 +128,7 @@ __global__ void create_simple_light(bvh_node *d_bvh_nodes, hitable **d_list, cam
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
-    auto pertext = new rtapp::noise_texture(4);
+    auto pertext = new noise_texture(4);
     d_list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(pertext));
     d_list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(pertext));
 

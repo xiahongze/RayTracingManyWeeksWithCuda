@@ -51,7 +51,7 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
     if (checkered)
     {
         d_list[0] = new sphere(vec3(0, -1000.0, -1), 1000,
-                               new lambertian(new rtapp::checker_texture(
+                               new lambertian(new checker_texture(
                                    0.8, vec3(0.2, 0.3, 0.1), vec3(0.9, 0.9, 0.9))));
     }
     else

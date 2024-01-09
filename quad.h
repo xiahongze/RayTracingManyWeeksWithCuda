@@ -5,7 +5,7 @@
 #include "ray.h"
 #include "vec3.h"
 
-class quad : public hitable
+class quad
 {
 public:
     __device__ quad(){};
@@ -14,9 +14,9 @@ public:
 
     __device__ void set_bounding_box();
 
-    __device__ aabb bounding_box() const override { return bbox; }
+    __device__ aabb bounding_box() const { return bbox; }
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const;
 
     __device__ bool is_interior(float a, float b, hit_record &rec) const;
 
@@ -30,16 +30,16 @@ private:
     vec3 w;
 };
 
-class box : public hitable
+class box
 {
 public:
     __device__ box(const vec3 &a, const vec3 &b, material *mat);
 
     __device__ ~box();
 
-    __device__ aabb bounding_box() const override { return bbox; }
+    __device__ aabb bounding_box() const { return bbox; }
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const;
 
 private:
     quad sides[6];
