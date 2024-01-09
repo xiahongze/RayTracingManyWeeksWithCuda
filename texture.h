@@ -77,7 +77,7 @@ public:
   __device__ app_texture(noise_texture *n);
   __device__ ~app_texture();
 
-  __device__ vec3 value(float u, float v, const vec3 &p) const = 0;
+  __device__ vec3 value(float u, float v, const vec3 &p) const;
 
 private:
   texture_type type;
