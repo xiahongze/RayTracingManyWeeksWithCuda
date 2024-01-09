@@ -1,26 +1,11 @@
 #pragma once
 
 #include "aabb.h"
+#include "hit_record.h"
 #include "interval.h"
 #include "quad.h"
 #include "ray.h"
 #include "sphere.h"
-
-class material;
-
-struct hit_record
-{
-public:
-    float t;
-    vec3 p;
-    vec3 normal;
-    material *mat_ptr;
-    float u;
-    float v;
-    bool front_face;
-
-    __device__ void set_face_normal(const ray &r, const vec3 &outward_normal);
-};
 
 enum class shape_type
 {
@@ -40,7 +25,6 @@ public:
     __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const;
     __device__ aabb bounding_box() const;
 
-private:
     shape_type shape;
     sphere *sphere;
     box *box;
