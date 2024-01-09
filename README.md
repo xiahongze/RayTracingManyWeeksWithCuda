@@ -34,6 +34,29 @@ Here in this project, an array of `bvh_data_node` containing object information 
 
 In CUDA device functions, we can use `malloc` or `new` to allocate memory dynamically. However, it is advised that we use them with caution because it might cause unexpected race conditions. If you need to do so, do it with one thread for max safety. To avoid these issues, it's generally recommended to pre-allocate memory where possible, and to use shared memory for inter-thread communication within blocks. This approach minimizes the need for dynamic memory allocation and reduces the risk of race conditions.
 
+### Copy & Move Semantics
+
+Move semantics involves destructing the object that is being moved from. The class destructor is called right after the move constructor. While copy semantics does not call the destructor of the object that is being copied from, the destructor will be called after the object is out of scope or deleted. Take this example,
+
+```
+void foo() {
+  A a = A(x, y, z); // move constructor, the rvalue will be destroyed after this line
+
+  A b = a; // copy constructor, a is still valid after this line
+
+  A *c = new A(a); // copy constructor, a is still valid after this line
+  ...
+
+  return; // a&b is destroyed here, but c lives on until it is deleted
+}
+```
+
+The same principle applies to code in CUDA. If you have object that has a pointer and you want to keep the data that is pointed to, you need to either,
+
+- do not release the memory in your class destructor
+- implement a copy constructor and copy the data to the new object
+- implement a move constructor and move the data to the new object, then set the pointer in the old object to `nullptr`
+
 ### Virtual functions & Memory allocation in CUDA
 
 Subclasses need to be created dynamically in device function. If allocated using `cudaMalloc` in host, the pointer is not aligned and later
