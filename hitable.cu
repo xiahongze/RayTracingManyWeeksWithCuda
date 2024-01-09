@@ -15,13 +15,13 @@ __device__ translate::~translate()
     delete object;
 }
 
-__device__ bool translate::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+__device__ bool translate::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     // Move the ray backwards by the offset
     ray offset_r(r.origin() - offset, r.direction(), r.get_time());
 
     // Determine whether an intersection exists along the offset ray (and if so, where)
-    if (!object->hit(offset_r, ray_t, rec))
+    if (!object->hit(offset_r, ray_t, rec, local_rand_state))
         return false;
 
     // Move the intersection point forwards by the offset
@@ -77,7 +77,7 @@ __device__ rotate_y::~rotate_y()
     delete object;
 }
 
-__device__ bool rotate_y::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+__device__ bool rotate_y::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     // Change the ray from world space to object space
     auto origin = r.origin();
@@ -92,7 +92,7 @@ __device__ bool rotate_y::hit(const ray &r, const interval &ray_t, hit_record &r
     ray rotated_r(origin, direction, r.get_time());
 
     // Determine whether an intersection exists in object space (and if so, where)
-    if (!object->hit(rotated_r, ray_t, rec))
+    if (!object->hit(rotated_r, ray_t, rec, local_rand_state))
         return false;
 
     // Change the intersection point from object space to world space

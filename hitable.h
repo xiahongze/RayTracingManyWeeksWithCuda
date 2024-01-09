@@ -23,7 +23,7 @@ public:
 class hitable
 {
 public:
-    __device__ virtual bool hit(const ray &r, const interval &ray_t, hit_record &rec) const = 0;
+    __device__ virtual bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const = 0;
 
     __device__ virtual aabb bounding_box() const = 0;
 };
@@ -39,7 +39,7 @@ public:
 
     __device__ ~translate();
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
 
     __device__ aabb bounding_box() const override;
 
@@ -56,7 +56,7 @@ public:
 
     __device__ ~rotate_y();
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
 
     __device__ aabb bounding_box() const override { return bbox; }
 

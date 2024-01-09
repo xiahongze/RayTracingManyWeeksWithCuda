@@ -16,14 +16,14 @@ __device__ constant_medium::~constant_medium()
     delete phase_function;
 }
 
-__device__ bool constant_medium::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+__device__ bool constant_medium::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     hit_record rec1, rec2;
 
-    if (!boundary->hit(r, interval::get_universe(), rec1))
+    if (!boundary->hit(r, interval::get_universe(), rec1, local_rand_state))
         return false;
 
-    if (!boundary->hit(r, interval(rec1.t + 0.0001, FLT_MAX), rec2))
+    if (!boundary->hit(r, interval(rec1.t + 0.0001, FLT_MAX), rec2, local_rand_state))
         return false;
 
     if (rec1.t < ray_t.min)
@@ -39,8 +39,7 @@ __device__ bool constant_medium::hit(const ray &r, const interval &ray_t, hit_re
 
     auto ray_length = r.direction().length();
     auto distance_inside_boundary = (rec2.t - rec1.t) * ray_length;
-    curandState local_rand_state;
-    auto hit_distance = neg_inv_density * log(curand_uniform(&local_rand_state));
+    auto hit_distance = neg_inv_density * log(curand_uniform(local_rand_state));
 
     if (hit_distance > distance_inside_boundary)
         return false;
