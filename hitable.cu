@@ -110,3 +110,67 @@ __device__ void hit_record::set_face_normal(const ray &r, const vec3 &outward_no
 
 //     return true;
 // }
+
+__device__ hitable::hitable(sphere *sphere)
+{
+    this->shape = shape_type::SPHERE;
+    this->sphere = sphere;
+}
+
+__device__ hitable::hitable(box *box)
+{
+    this->shape = shape_type::BOX;
+    this->box = box;
+}
+
+__device__ hitable::hitable(quad *quad)
+{
+    this->shape = shape_type::QUAD;
+    this->quad = quad;
+}
+
+__device__ hitable::~hitable()
+{
+    switch (shape)
+    {
+    case shape_type::SPHERE:
+        delete sphere;
+        break;
+    case shape_type::BOX:
+        delete box;
+        break;
+    case shape_type::QUAD:
+        delete quad;
+        break;
+    }
+}
+
+__device__ bool hitable::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+{
+    switch (shape)
+    {
+    case shape_type::SPHERE:
+        return sphere->hit(r, ray_t, rec);
+    case shape_type::BOX:
+        return box->hit(r, ray_t, rec);
+    case shape_type::QUAD:
+        return quad->hit(r, ray_t, rec);
+    default:
+        return false;
+    }
+}
+
+__device__ aabb hitable::bounding_box() const
+{
+    switch (shape)
+    {
+    case shape_type::SPHERE:
+        return sphere->bounding_box();
+    case shape_type::BOX:
+        return box->bounding_box();
+    case shape_type::QUAD:
+        return quad->bounding_box();
+    default:
+        return aabb();
+    }
+}

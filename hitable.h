@@ -32,9 +32,9 @@ enum class shape_type
 class hitable
 {
 public:
-    __device__ hitable(shape_type shape, sphere *sphere);
-    __device__ hitable(shape_type shape, box *box);
-    __device__ hitable(shape_type shape, quad *quad);
+    __device__ hitable(sphere *sphere);
+    __device__ hitable(box *box);
+    __device__ hitable(quad *quad);
     __device__ ~hitable();
 
     __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const;
