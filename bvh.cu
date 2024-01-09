@@ -204,10 +204,10 @@ __device__ bool bvh_node::hit(const bvh_node *nodes, const ray &r, interval ray_
     return hit_anything;
 }
 
-__device__ void bvh_node::prefill_nodes(bvh_node *nodes, hitable **objects, int list_size)
+__device__ void bvh_node::prefill_nodes(bvh_node *nodes, hitable *objects, int list_size)
 {
     for (int i = 0; i < list_size; ++i)
     {
-        nodes[i] = bvh_node(objects[i]);
+        nodes[i] = bvh_node(&objects[i]);
     }
 }

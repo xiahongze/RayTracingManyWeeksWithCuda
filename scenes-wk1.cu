@@ -6,7 +6,7 @@
 #include "utils.h"
 
 __global__ void
-create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
+create_random_spheres(bvh_node *d_bvh_nodes, hitable *d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
@@ -28,22 +28,22 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
             float choose_mat = RND;
             if (choose_mat < 0.8f)
             {
-                d_list[idx] = new hitable(new sphere(center, radius, new material(new lambertian(vec3::random_cuda(&local_rand_state).as_squared()))));
+                d_list[idx] = hitable(new sphere(center, radius, new material(new lambertian(vec3::random_cuda(&local_rand_state).as_squared()))));
             }
             else if (choose_mat < 0.95f)
             {
-                d_list[idx] = new hitable(new sphere(center, radius,
-                                                     new material(new metal(1.0f + -0.5f * vec3::random_cuda(&local_rand_state), 0.5f * RND))));
+                d_list[idx] = hitable(new sphere(center, radius,
+                                                 new material(new metal(1.0f + -0.5f * vec3::random_cuda(&local_rand_state), 0.5f * RND))));
             }
             else
             {
-                d_list[idx] = new hitable(new sphere(center, radius, new material(new dielectric(1.5))));
+                d_list[idx] = hitable(new sphere(center, radius, new material(new dielectric(1.5))));
             }
 
             if (bounce && RND < bounce_pct) // only 1/3 are allowed to move
             {
-                d_list[idx]->sphere->set_movable(true);
-                d_list[idx]->sphere->set_center_vec(vec3(0, RND * radius * 2, 0));
+                d_list[idx].sphere->set_movable(true);
+                d_list[idx].sphere->set_center_vec(vec3(0, RND * radius * 2, 0));
             }
         }
     }
@@ -57,12 +57,12 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
     // else
     {
 
-        d_list[0] = new hitable(new sphere(vec3(0, -1000.0, -1), 1000,
-                                           new material(new lambertian(vec3(0.5, 0.5, 0.5)))));
+        d_list[0] = hitable(new sphere(vec3(0, -1000.0, -1), 1000,
+                                       new material(new lambertian(vec3(0.5, 0.5, 0.5)))));
     }
-    d_list[1] = new hitable(new sphere(vec3(0, 1, 0), 1.0, new material(new dielectric(1.5))));
-    d_list[2] = new hitable(new sphere(vec3(-4, 1, 0), 1.0, new material(new lambertian(vec3(0.4, 0.2, 0.1)))));
-    d_list[3] = new hitable(new sphere(vec3(4, 1, 0), 1.0, new material(new metal(vec3(0.7, 0.6, 0.5), 0.0))));
+    d_list[1] = hitable(new sphere(vec3(0, 1, 0), 1.0, new material(new dielectric(1.5))));
+    d_list[2] = hitable(new sphere(vec3(-4, 1, 0), 1.0, new material(new lambertian(vec3(0.4, 0.2, 0.1)))));
+    d_list[3] = hitable(new sphere(vec3(4, 1, 0), 1.0, new material(new metal(vec3(0.7, 0.6, 0.5), 0.0))));
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -78,7 +78,7 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
     d_camera->initialize();
 }
 
-void random_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
+void random_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable *&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
 {
     INIT_LIST_AND_TREE(22 * 22 + 1 + 3);
 
