@@ -7,7 +7,7 @@ DEBUG = false
 
 ifeq ($(DEBUG), true)
 	CXXDEBUGFLAG += -g
-	NVDEBUGFLAG += -g -G -dopt=on
+	NVDEBUGFLAG += -g -G
 else
 	CXXDEBUGFLAG += -O3
 	NVDEBUGFLAG += -O3
