@@ -77,6 +77,7 @@ public:
 
     __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
     __device__ static vec3 random_in_unit_sphere(curandState *local_rand_state);
+    __device__ static vec3 random_unit_vector(curandState *local_rand_state);
 
     __host__ __device__ inline vec3 as_squared() const
     {
@@ -233,4 +234,10 @@ __device__ inline vec3 vec3::random_in_unit_sphere(curandState *local_rand_state
         p = 2.0f * vec3::random_cuda(local_rand_state) - offset;
     } while (p.squared_length() >= 1.0f);
     return p;
+}
+
+__device__ inline vec3 vec3::random_unit_vector(curandState *local_rand_state)
+{
+    auto v = vec3::random_cuda(local_rand_state);
+    return unit_vector(v);
 }

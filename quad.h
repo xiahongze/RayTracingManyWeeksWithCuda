@@ -16,7 +16,7 @@ public:
 
     __device__ aabb bounding_box() const override { return bbox; }
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
 
     __device__ bool is_interior(float a, float b, hit_record &rec) const;
 
@@ -39,7 +39,7 @@ public:
 
     __device__ aabb bounding_box() const override { return bbox; }
 
-    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec) const override;
+    __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
 
 private:
     quad sides[6];

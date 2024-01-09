@@ -60,3 +60,16 @@ public:
 private:
     rtapp::texture *emit;
 };
+
+class isotropic : public material
+{
+public:
+    __device__ isotropic(vec3 c) : albedo(new rtapp::solid_color(c)) {}
+    __device__ isotropic(rtapp::texture *a) : albedo(a) {}
+    __device__ ~isotropic();
+
+    __device__ bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered, curandState *local_rand_state) const override;
+
+private:
+    rtapp::texture *albedo;
+};

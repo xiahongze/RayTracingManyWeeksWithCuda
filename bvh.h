@@ -30,7 +30,7 @@ struct bvh_node : bvh_data_node
 
     __device__ static void prefill_nodes(bvh_node *nodes, hitable **objects, int list_size);
 
-    __device__ static bool hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec);
+    __device__ static bool hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec, curandState *local_rand_state);
 
     /**
      * @brief _bvh_node is a helper class for building the bvh tree

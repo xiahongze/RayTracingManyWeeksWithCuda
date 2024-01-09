@@ -16,12 +16,12 @@ __device__ void quad::set_bounding_box()
     bbox = aabb(Q, Q + u + v).pad();
 }
 
-__device__ bool quad::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+__device__ bool quad::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     auto denom = dot(normal, r.direction());
 
     // No hit if the ray is parallel to the plane.
-    if (fabs(denom) < 1e-8)
+    if (fabs(denom) < 1e-4)
         return false;
 
     // Return false if the hit point parameter t is outside the ray interval.
@@ -92,7 +92,7 @@ __device__ box::~box()
     delete mat_ptr;
 }
 
-__device__ bool box::hit(const ray &r, const interval &ray_t, hit_record &rec) const
+__device__ bool box::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     hit_record temp_rec;
     bool hit_anything = false;
@@ -100,14 +100,11 @@ __device__ bool box::hit(const ray &r, const interval &ray_t, hit_record &rec) c
 
     for (int i = 0; i < 6; i++)
     {
-        if (sides[i].hit(r, ray_t, temp_rec))
+        if (sides[i].hit(r, interval(ray_t.min, closest_so_far), temp_rec, local_rand_state))
         {
             hit_anything = true;
-            if (temp_rec.t < closest_so_far)
-            {
-                closest_so_far = temp_rec.t;
-                rec = temp_rec;
-            }
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
         }
     }
 

@@ -163,7 +163,7 @@ __host__ int bvh_node::build_tree(bvh_node *nodes, int size)
     return tree_height;
 }
 
-__device__ bool bvh_node::hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec)
+__device__ bool bvh_node::hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec, curandState *local_rand_state)
 {
     // Stack for node indices
     int stack[MAX_TREE_HEIGHT]; // Adjust size as needed, Do not use dynamic allocation
@@ -184,7 +184,7 @@ __device__ bool bvh_node::hit(const bvh_node *nodes, const ray &r, interval ray_
             // If it's a leaf node
             if (node.left == -1 && node.right == -1)
             {
-                if (node.obj->hit(r, ray_t, rec))
+                if (node.obj->hit(r, ray_t, rec, local_rand_state))
                 {
                     hit_anything = true;
                     ray_t = interval(ray_t.min, rec.t);

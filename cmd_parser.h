@@ -21,6 +21,7 @@ struct CommandLineOptions
 
     // week 2 world
     bool cornell_box_rt_trans;
+    bool cornell_box_smoke;
 };
 
 CommandLineOptions parse_command_line(int argc, char **argv);

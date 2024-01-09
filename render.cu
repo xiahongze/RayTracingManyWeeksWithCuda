@@ -15,7 +15,7 @@ __device__ vec3 get_ray_color_pixel(const ray &r, bvh_node *d_bvh_nodes, vec3 &b
     for (int i = 0; i < RAY_MAX_DEPTH; i++)
     {
         hit_record rec;
-        if (!bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec))
+        if (!bvh_node::hit(d_bvh_nodes, cur_ray, interval(0.001f, FLT_MAX), rec, local_rand_state))
         {
             final_color += backgroound * cur_attenuation;
             break;
