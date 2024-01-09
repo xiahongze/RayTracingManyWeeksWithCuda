@@ -28,7 +28,7 @@ struct bvh_node : bvh_data_node
         bbox = object->bounding_box();
     }
 
-    __device__ static void prefill_nodes(bvh_node *nodes, hitable *objects, int list_size);
+    __device__ static void prefill_nodes(bvh_node *nodes, hitable **objects, int list_size);
 
     __device__ static bool hit(const bvh_node *nodes, const ray &r, interval ray_t, hit_record &rec);
 

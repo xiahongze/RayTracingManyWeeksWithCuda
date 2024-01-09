@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaMalloc((void **)&d_fb, fb_size));
 
     // make our world of hitables & the camera
-    hitable *d_list;
+    hitable **d_list;
     int list_size, tree_size;
 
     // create two arrays of bvh_nodes on host and device
@@ -89,7 +89,7 @@ int main(int argc, char **argv)
     writeJPGImage(cmd_opts.output_file.c_str(), cmd_opts.image_width, cmd_opts.image_height, h_fb);
 
     // clean up
-    // free_objects<<<dim3(1), dim3(1)>>>(d_list, list_size);
+    free_objects<<<dim3(1), dim3(1)>>>(d_list, list_size);
     checkCudaErrors(cudaFree(d_camera));
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_bvh_nodes));

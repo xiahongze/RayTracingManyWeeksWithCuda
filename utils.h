@@ -11,11 +11,11 @@
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda((val), #val, __FILE__, __LINE__)
 
-#define INIT_LIST_AND_TREE(size)                                                \
-    list_size = (size);                                                         \
-    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable))); \
-    tree_size = 2 * list_size;                                                  \
-    h_bvh_nodes = new bvh_node[tree_size]; /* binary tree */                    \
+#define INIT_LIST_AND_TREE(size)                                                  \
+    list_size = (size);                                                           \
+    checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *))); \
+    tree_size = 2 * list_size;                                                    \
+    h_bvh_nodes = new bvh_node[tree_size]; /* binary tree */                      \
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
 
 #define CHECK_SINGLE_THREAD_BOUNDS()               \
