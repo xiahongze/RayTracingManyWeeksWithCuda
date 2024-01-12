@@ -273,14 +273,15 @@ __global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, came
     auto noise_sphere = new sphere(vec3(220, 280, 300), 80, new lambertian(pertext));
     d_list[z++] = noise_sphere;
 
-    /** not now */
-    // auto white = new lambertian(vec3(0.73, 0.73, 0.73));
-    // int num_random_spheres = 1000;
-    // for (int j = 0; j < num_random_spheres; j++)
-    // {
-    //     auto random_sphere = new sphere(vec3::random_cuda(&local_rand_state) * 165, 10, white);
-    //     d_list[8 + j] = random_sphere;
-    // }
+    auto white = new lambertian(vec3(0.73, 0.73, 0.73));
+    int num_random_spheres = 1000;
+    for (int j = 0; j < num_random_spheres; j++)
+    {
+        auto random_sphere = new sphere(vec3::random_cuda(&local_rand_state) * 165, 10, white);
+        auto rotated_random_sphere = new rotate_y(random_sphere, 15);
+        auto translated_random_sphere = new translate(rotated_random_sphere, vec3(-100, 270, 395));
+        d_list[z++] = translated_random_sphere;
+    }
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -301,7 +302,7 @@ void final_scene(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_li
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
-    INIT_LIST_AND_TREE(408);
+    INIT_LIST_AND_TREE(1408);
 
     create_final_scene<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
                                                    texture.width, texture.height, texture.channels,
