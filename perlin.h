@@ -6,7 +6,7 @@
 class perlin
 {
 public:
-    __device__ perlin();
+    __device__ perlin(curandState *local_rand_state);
 
     __device__ ~perlin();
 

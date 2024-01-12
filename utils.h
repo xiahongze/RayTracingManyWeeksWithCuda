@@ -3,7 +3,7 @@
 #include "hitable.h"
 
 #ifndef RAND_SEED
-#define RAND_SEED 1984
+#define RAND_SEED 42
 #endif
 
 #define RND (curand_uniform(&local_rand_state))
@@ -29,3 +29,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 __global__ void free_objects(hitable **d_list, int size);
 
 __device__ float degrees_to_radians(float degrees);
+
+#define INIT_RAND_LOCAL()         \
+    curandState local_rand_state; \
+    curand_init(RAND_SEED, 0, 0, &local_rand_state);
