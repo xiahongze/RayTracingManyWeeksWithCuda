@@ -57,9 +57,7 @@ namespace rtapp
   class noise_texture : public texture
   {
   public:
-    __device__ noise_texture() {}
-
-    __device__ noise_texture(float sc) : scale(sc) {}
+    __device__ noise_texture(float sc, curandState *local_rand_state) : scale(sc), noise(local_rand_state) {}
 
     __device__ vec3 value(float u, float v, const vec3 &p) const override;
 

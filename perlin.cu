@@ -1,18 +1,17 @@
 #include "perlin.h"
 #include "utils.h"
 
-__device__ perlin::perlin()
+__device__ perlin::perlin(curandState *local_rand_state)
 {
     ranvec = new vec3[point_count];
-    INIT_RAND_LOCAL();
     for (int i = 0; i < point_count; ++i)
     {
-        ranvec[i] = (-0.5f + vec3::random_cuda(&local_rand_state)) * 2;
+        ranvec[i] = (-0.5f + vec3::random_cuda(local_rand_state)) * 2;
     }
 
-    perm_x = perlin_generate_perm(&local_rand_state);
-    perm_y = perlin_generate_perm(&local_rand_state);
-    perm_z = perlin_generate_perm(&local_rand_state);
+    perm_x = perlin_generate_perm(local_rand_state);
+    perm_y = perlin_generate_perm(local_rand_state);
+    perm_z = perlin_generate_perm(local_rand_state);
 }
 
 __device__ perlin::~perlin()

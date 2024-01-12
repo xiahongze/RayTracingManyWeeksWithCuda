@@ -33,7 +33,7 @@ private:
 class box : public hitable
 {
 public:
-    __device__ box(const vec3 &a, const vec3 &b, material *mat);
+    __device__ box(const vec3 &a, const vec3 &b, material *mat, curandState *local_rand_state);
 
     __device__ ~box();
 
