@@ -29,14 +29,15 @@ __global__ void create_earth(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_
     d_camera->initialize();
 }
 
+#define LOAD_IMAGE_TEXTURE(path)                                                  \
+    auto texture = rtapp::image_texture(path);                                    \
+    unsigned char *d_pixel_data;                                                  \
+    checkCudaErrors(cudaMalloc((void **)&d_pixel_data, texture.pixel_data_size)); \
+    checkCudaErrors(cudaMemcpy(d_pixel_data, texture.pixel_data, texture.pixel_data_size, cudaMemcpyHostToDevice));
+
 void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
-    auto earth_texture = rtapp::image_texture("assets/earthmap.jpg");
-
-    // copy texture to device
-    unsigned char *d_pixel_data;
-    checkCudaErrors(cudaMalloc((void **)&d_pixel_data, earth_texture.pixel_data_size));
-    checkCudaErrors(cudaMemcpy(d_pixel_data, earth_texture.pixel_data, earth_texture.pixel_data_size, cudaMemcpyHostToDevice));
+    LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
     list_size = 1;
     checkCudaErrors(cudaMalloc((void **)&d_list, list_size * sizeof(hitable *)));
@@ -46,7 +47,7 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
     checkCudaErrors(cudaMalloc((void **)&d_bvh_nodes, tree_size * sizeof(bvh_node)));
 
     create_earth<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
-                                             d_pixel_data, earth_texture.width, earth_texture.height, earth_texture.channels,
+                                             d_pixel_data, texture.width, texture.height, texture.channels,
                                              list_size, nx, ny);
 
     std::cout << "earth scene created" << std::endl;
@@ -217,4 +218,102 @@ void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_li
 
     create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
                                                    list_size, nx, ny, rotate_translate, smoke);
+}
+
+__global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, unsigned char *d_pixel_data,
+                                   int width, int height, int channels, int list_size, int nx, int ny)
+{
+    CHECK_SINGLE_THREAD_BOUNDS();
+    curandState local_rand_state;
+
+    auto ground = new lambertian(vec3(0.48, 0.83, 0.53));
+    int boxes_per_side = 20;
+    i = 0;
+    for (int z = 0; z < boxes_per_side; z++)
+    {
+        for (int x = 0; x < boxes_per_side; x++)
+        {
+            auto w = 100.0;
+            auto x0 = -1000.0 + x * w;
+            auto z0 = -1000.0 + z * w;
+            auto y0 = 0.0;
+            auto x1 = x0 + w;
+            auto y1 = 101.0 * curand_uniform(&local_rand_state);
+            auto z1 = z0 + w;
+            d_list[i++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground);
+        }
+    }
+
+    auto light = new diffuse_light(vec3(7, 7, 7));
+    auto quad_light = new quad(vec3(123, 554, 147), vec3(300, 0, 0), vec3(0, 0, 265), light);
+    d_list[i++] = quad_light;
+
+    auto center1 = vec3(400, 400, 200);
+    auto center2 = center1 + vec3(30, 0, 0);
+    auto sphere_material = new lambertian(vec3(0.7, 0.3, 0.1));
+    auto moving_sphere = new sphere(center1, center2, 50, sphere_material);
+    d_list[i++] = moving_sphere;
+
+    auto sphere2 = new sphere(vec3(260, 150, 45), 50, new dielectric(1.5));
+    auto sphere3 = new sphere(vec3(0, 150, 145), 50, new metal(vec3(0.8, 0.8, 0.9), 1.0));
+    d_list[i++] = sphere2;
+    d_list[i++] = sphere3;
+
+    auto smoke1 = new constant_medium(new sphere(vec3(360, 150, 145), 70, new dielectric(1.5)), 0.2, vec3(0.2, 0.4, 0.9));
+    auto smoke2 = new constant_medium(new sphere(vec3(0, 0, 0), 5000, new dielectric(1.5)), 0.0001, vec3(1, 1, 1));
+    d_list[i++] = smoke1;
+    d_list[i++] = smoke2;
+
+    auto earth_texture = new rtapp::image_texture(d_pixel_data, width, height, channels);
+    auto earth = new sphere(vec3(400, 200, 400), 100, new lambertian(earth_texture));
+    d_list[i++] = earth;
+
+    auto pertext = new rtapp::noise_texture(0.1);
+    auto noise_sphere = new sphere(vec3(220, 280, 300), 80, new lambertian(pertext));
+    d_list[i++] = noise_sphere;
+
+    /** not now */
+    // auto white = new lambertian(vec3(0.73, 0.73, 0.73));
+    // int num_random_spheres = 1000;
+    // for (int j = 0; j < num_random_spheres; j++)
+    // {
+    //     auto random_sphere = new sphere(vec3::random_cuda(&local_rand_state) * 165, 10, white);
+    //     d_list[8 + j] = random_sphere;
+    // }
+
+    // create bvh_nodes
+    bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
+    // cam.aspect_ratio = 1.0;
+    // cam.image_width = image_width;
+    // cam.samples_per_pixel = samples_per_pixel;
+    // cam.max_depth = max_depth;
+    // cam.background = color(0, 0, 0);
+
+    // cam.vfov = 40;
+    // cam.lookfrom = point3(478, 278, -600);
+    // cam.lookat = point3(278, 278, 0);
+    // cam.vup = vec3(0, 1, 0);
+
+    // cam.defocus_angle = 0;
+    *d_camera = camera();
+    d_camera->lookfrom = vec3(478, 278, -600);
+    d_camera->lookat = vec3(278, 278, 0);
+    d_camera->vup = vec3(0, 1, 0);
+    d_camera->vfov = 40.0;
+    d_camera->image_width = nx;
+    d_camera->image_height = ny;
+    d_camera->defocus_angle = 0.0;
+    d_camera->background = vec3(0, 0, 0);
+    d_camera->initialize();
+}
+
+void final_scene(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+{
+    LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
+
+    INIT_LIST_AND_TREE(408);
+
+    create_final_scene<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
+                                                   texture.width, texture.height, texture.channels,
+                                                   list_size, nx, ny);
 }
