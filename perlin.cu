@@ -1,9 +1,10 @@
 #include "perlin.h"
+#include "utils.h"
 
 __device__ perlin::perlin()
 {
     ranvec = new vec3[point_count];
-    curandState local_rand_state;
+    INIT_RAND_LOCAL();
     for (int i = 0; i < point_count; ++i)
     {
         ranvec[i] = (-0.5f + vec3::random_cuda(&local_rand_state)) * 2;

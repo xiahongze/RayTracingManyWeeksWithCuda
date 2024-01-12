@@ -1,4 +1,5 @@
 #include "quad.h"
+#include "utils.h"
 
 __device__ quad::quad(const vec3 &_Q, const vec3 &_u, const vec3 &_v, material *m)
     : Q(_Q), u(_u), v(_v), mat(m)
@@ -70,7 +71,7 @@ __device__ box::box(const vec3 &a, const vec3 &b, material *mat)
     auto dy = vec3(0, max.y() - min.y(), 0);
     auto dz = vec3(0, 0, max.z() - min.z());
 
-    curandState local_rand_state;
+    INIT_RAND_LOCAL();
     // it is important to zigzag the vertices because
     // using float we are easily runing into numerical stability issues
     // giving zigzags we are sure that the vertices are not coplanar

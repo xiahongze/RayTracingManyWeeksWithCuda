@@ -228,7 +228,7 @@ __global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, came
 
     auto ground = new lambertian(vec3(0.48, 0.83, 0.53));
     int boxes_per_side = 20;
-    curandState local_rand_state;
+    INIT_RAND_LOCAL()
 
     for (i = 0; i < boxes_per_side; i++)
     {
@@ -239,7 +239,7 @@ __global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, came
             auto y0 = 0.0;
             auto z0 = -1000.0 + j * w;
             auto x1 = x0 + w;
-            auto y1 = 100.0 * curand_uniform(&local_rand_state) + 1;
+            auto y1 = 100.0 * curand_uniform(&local_rand_state) - 49;
             auto z1 = z0 + w;
             d_list[z++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground);
         }
