@@ -220,8 +220,8 @@ void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_li
                                                    list_size, nx, ny, rotate_translate, smoke);
 }
 
-__global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, unsigned char *d_pixel_data,
-                                   int width, int height, int channels, int list_size, int nx, int ny)
+__global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, unsigned char *d_pixel_data,
+                                       int width, int height, int channels, int list_size, int nx, int ny)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
     int z = 0;
@@ -298,13 +298,13 @@ __global__ void create_final_scene(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_camera->initialize();
 }
 
-void final_scene(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
     INIT_LIST_AND_TREE(1408);
 
-    create_final_scene<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
-                                                   texture.width, texture.height, texture.channels,
-                                                   list_size, nx, ny);
+    create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
+                                                       texture.width, texture.height, texture.channels,
+                                                       list_size, nx, ny);
 }
