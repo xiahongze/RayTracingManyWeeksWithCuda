@@ -71,17 +71,12 @@ __device__ box::box(const vec3 &a, const vec3 &b, material *mat, curandState *lo
     auto dy = vec3(0, max.y() - min.y(), 0);
     auto dz = vec3(0, 0, max.z() - min.z());
 
-    // it is important to zigzag the vertices because
-    // using float we are easily runing into numerical stability issues
-    // giving zigzags we are sure that the vertices are not coplanar
-    auto dvec = dx + dy + dz;
-
-    sides[0] = quad(vec3(min.x(), min.y(), max.z()).zigzag(0.01, dvec, local_rand_state), dx, dy, mat);  // front
-    sides[1] = quad(vec3(max.x(), min.y(), max.z()).zigzag(0.01, dvec, local_rand_state), -dz, dy, mat); // right
-    sides[2] = quad(vec3(max.x(), min.y(), min.z()).zigzag(0.01, dvec, local_rand_state), -dx, dy, mat); // back
-    sides[3] = quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, local_rand_state), dz, dy, mat);  // left
-    sides[4] = quad(vec3(min.x(), max.y(), max.z()).zigzag(0.01, dvec, local_rand_state), dx, -dz, mat); // top
-    sides[5] = quad(vec3(min.x(), min.y(), min.z()).zigzag(0.01, dvec, local_rand_state), dx, dz, mat);  // bottom
+    sides[0] = quad(vec3(min.x(), min.y(), max.z()), dx, dy, mat);  // front
+    sides[1] = quad(vec3(max.x(), min.y(), max.z()), -dz, dy, mat); // right
+    sides[2] = quad(vec3(max.x(), min.y(), min.z()), -dx, dy, mat); // back
+    sides[3] = quad(vec3(min.x(), min.y(), min.z()), dz, dy, mat);  // left
+    sides[4] = quad(vec3(min.x(), max.y(), max.z()), dx, -dz, mat); // top
+    sides[5] = quad(vec3(min.x(), min.y(), min.z()), dx, dz, mat);  // bottom
 
     bbox = aabb(min, max);
 }
