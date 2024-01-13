@@ -264,8 +264,13 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_list[z++] = sphere2;
     d_list[z++] = sphere3;
 
-    auto smoke1 = new constant_medium(new sphere(vec3(360, 150, 145), 70, new dielectric(1.5)), 0.2, vec3(0.2, 0.4, 0.9));
-    auto smoke2 = new constant_medium(new sphere(vec3(0, 0, 0), 5000, new dielectric(1.5)), 0.0001, vec3(1, 1, 1));
+    auto sphere4 = new sphere(vec3(360, 150, 145), 70, new dielectric(1.5));
+    auto sphere5 = new sphere(vec3(0, 0, 0), 5000, new dielectric(1.5));
+    auto smoke1 = new constant_medium(sphere4, 0.2, vec3(0.2, 0.4, 0.9));
+    auto smoke2 = new constant_medium(sphere5, 0.0001, vec3(1, 1, 1));
+    // we need to add both the original spheres and the smoke
+    d_list[z++] = sphere4;
+    d_list[z++] = sphere5;
     d_list[z++] = smoke1;
     d_list[z++] = smoke2;
 
@@ -306,7 +311,7 @@ void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
-    INIT_LIST_AND_TREE(1408);
+    INIT_LIST_AND_TREE(1410);
 
     create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
                                                        texture.width, texture.height, texture.channels,
