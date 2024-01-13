@@ -61,7 +61,7 @@ __device__ bool quad::is_interior(float a, float b, hit_record &rec) const
     return true;
 }
 
-__device__ box::box(const vec3 &a, const vec3 &b, material *mat, curandState *local_rand_state)
+__device__ box::box(const vec3 &a, const vec3 &b, material *mat)
 {
     // Construct the two opposite vertices with the minimum and maximum coordinates.
     auto min = vec3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));

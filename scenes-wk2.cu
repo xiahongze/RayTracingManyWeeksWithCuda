@@ -184,15 +184,15 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
 
     if (rotate_translate)
     {
-        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white, &local_rand_state);
-        auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white, &local_rand_state);
+        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+        auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white);
         d_list[6] = new translate(new rotate_y(box1, 15), vec3(265, 0, 295));
         d_list[7] = new translate(new rotate_y(box2, -18), vec3(130, 0, 65));
     }
     else
     {
-        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white, &local_rand_state);
-        d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white, &local_rand_state);
+        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
     }
 
     if (smoke)
@@ -245,7 +245,7 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
             auto x1 = x0 + w;
             auto y1 = 100.0 * curand_uniform(&local_rand_state) - 49;
             auto z1 = z0 + w;
-            d_list[z++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground, &local_rand_state);
+            d_list[z++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground);
         }
     }
 
