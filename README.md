@@ -50,3 +50,7 @@ CUDA error = 719 at main.cu:75 'cudaDeviceSynchronize()'
 ```
 
 This gives none information about the error as the problem apparently works fine without `-G` flag. To debug this, you need `-dopt=on` to optimize the code as well as `-G` to insert debug symbols. This is not ideal as removing optimization generally makes code more debuggable. However, in this case, it does the opposite.
+
+### Random number generation in CUDA
+
+It is very important to initialize the random number generator with different seeds for each thread and even when you only have one thread. Otherwise, all threads will generate the same random numbers. This is because the random number generator is deterministic and it will generate the same sequence of numbers for the same seed.

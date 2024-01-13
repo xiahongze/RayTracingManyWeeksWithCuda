@@ -184,15 +184,15 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
 
     if (rotate_translate)
     {
-        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white, &local_rand_state);
-        auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white, &local_rand_state);
+        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+        auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white);
         d_list[6] = new translate(new rotate_y(box1, 15), vec3(265, 0, 295));
         d_list[7] = new translate(new rotate_y(box2, -18), vec3(130, 0, 65));
     }
     else
     {
-        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white, &local_rand_state);
-        d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white, &local_rand_state);
+        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
     }
 
     if (smoke)
@@ -245,7 +245,7 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
             auto x1 = x0 + w;
             auto y1 = 100.0 * curand_uniform(&local_rand_state) - 49;
             auto z1 = z0 + w;
-            d_list[z++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground, &local_rand_state);
+            d_list[z++] = new box(vec3(x0, y0, z0), vec3(x1, y1, z1), ground);
         }
     }
 
@@ -264,8 +264,13 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_list[z++] = sphere2;
     d_list[z++] = sphere3;
 
-    auto smoke1 = new constant_medium(new sphere(vec3(360, 150, 145), 70, new dielectric(1.5)), 0.2, vec3(0.2, 0.4, 0.9));
-    auto smoke2 = new constant_medium(new sphere(vec3(0, 0, 0), 5000, new dielectric(1.5)), 0.0001, vec3(1, 1, 1));
+    auto sphere4 = new sphere(vec3(360, 150, 145), 70, new dielectric(1.5));
+    auto sphere5 = new sphere(vec3(0, 0, 0), 5000, new dielectric(1.5));
+    auto smoke1 = new constant_medium(sphere4, 0.2, vec3(0.2, 0.4, 0.9));
+    auto smoke2 = new constant_medium(sphere5, 0.0001, vec3(1, 1, 1));
+    // we need to add both the original spheres and the smoke
+    d_list[z++] = sphere4;
+    d_list[z++] = sphere5;
     d_list[z++] = smoke1;
     d_list[z++] = smoke2;
 
@@ -306,7 +311,7 @@ void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
-    INIT_LIST_AND_TREE(1408);
+    INIT_LIST_AND_TREE(1410);
 
     create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
                                                        texture.width, texture.height, texture.channels,
