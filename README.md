@@ -60,8 +60,18 @@ Usage:
 ### Random spheres
 
 ```bash
-./main -c 0 -s 100 -o out.jpg
+./main -c 0 -s 100 -o random-spheres.jpg
 ```
+
+![random-spheres](./images/random-spheres.jpg)
+
+### Week 2 final scene
+
+```bash
+./main -c 6 -s 200 --seed 42 --tx 8 --ty 8 --width 800 --height 800 -o wk2-final-scene.jpg
+```
+
+![week2-final-scene](./images/wk2-final-scene.jpg)
 
 ## Some learnings
 
