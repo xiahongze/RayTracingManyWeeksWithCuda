@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
                 cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
     dim3 threads(cmd_opts.tx, cmd_opts.ty);
-    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, d_camera, d_bvh_nodes);
+    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, cmd_opts.max_depth, d_camera, d_bvh_nodes);
     checkCudaErrors(cudaGetLastError());
 
     checkCudaErrors(cudaDeviceSynchronize());
