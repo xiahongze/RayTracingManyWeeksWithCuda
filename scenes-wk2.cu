@@ -54,7 +54,7 @@ void earth(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
 }
 
 __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
-                                          int list_size, int nx, int ny)
+                                          int list_size, int nx, int ny, int rand_seed)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
     INIT_RAND_LOCAL();
@@ -77,12 +77,12 @@ __global__ void create_two_perlin_spheres(bvh_node *d_bvh_nodes, hitable **d_lis
     d_camera->initialize();
 }
 
-void two_perlin_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+void two_perlin_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
 {
     INIT_LIST_AND_TREE(2);
 
     create_two_perlin_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
-                                                          list_size, nx, ny);
+                                                          list_size, nx, ny, rand_seed);
 }
 
 __global__ void create_quads(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
@@ -127,7 +127,7 @@ void quads(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, ca
 }
 
 __global__ void create_simple_light(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
-                                    int list_size, int nx, int ny)
+                                    int list_size, int nx, int ny, int rand_seed)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
     INIT_RAND_LOCAL();
@@ -155,16 +155,16 @@ __global__ void create_simple_light(bvh_node *d_bvh_nodes, hitable **d_list, cam
     d_camera->initialize();
 }
 
-void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
 {
     INIT_LIST_AND_TREE(4);
 
     create_simple_light<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
-                                                    list_size, nx, ny);
+                                                    list_size, nx, ny, rand_seed);
 }
 
 __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
-                                   int list_size, int nx, int ny, bool rotate_translate, bool smoke)
+                                   int list_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
@@ -216,16 +216,16 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_camera->initialize();
 }
 
-void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool rotate_translate, bool smoke)
+void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
 {
     INIT_LIST_AND_TREE(8);
 
     create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
-                                                   list_size, nx, ny, rotate_translate, smoke);
+                                                   list_size, nx, ny, rand_seed, rotate_translate, smoke);
 }
 
 __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, unsigned char *d_pixel_data,
-                                       int width, int height, int channels, int list_size, int nx, int ny)
+                                       int width, int height, int channels, int list_size, int nx, int ny, int rand_seed)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
     int z = 0;
@@ -307,7 +307,7 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_camera->initialize();
 }
 
-void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny)
+void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
@@ -315,5 +315,5 @@ void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&
 
     create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
                                                        texture.width, texture.height, texture.channels,
-                                                       list_size, nx, ny);
+                                                       list_size, nx, ny, rand_seed);
 }

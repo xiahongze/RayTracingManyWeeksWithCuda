@@ -37,7 +37,7 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
     return final_color; // exceeded recursion
 }
 
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, camera *d_camera, bvh_node *d_bvh_nodes)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, int rand_seed, camera *d_camera, bvh_node *d_bvh_nodes)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -46,7 +46,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, 
     int pixel_index = j * max_x + i;
 
     curandState local_rand_state;
-    curand_init(RAND_SEED + pixel_index, 0, 0, &local_rand_state);
+    curand_init(rand_seed + pixel_index, 0, 0, &local_rand_state);
 
     vec3 col(0, 0, 0);
     for (int s = 0; s < ns; s++)

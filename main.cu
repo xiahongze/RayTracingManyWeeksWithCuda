@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     {
     case 0:
         random_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                       cmd_opts.image_width, cmd_opts.image_height, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
+                       cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed, cmd_opts.bounce, cmd_opts.bounce_pct, cmd_opts.checkered);
         break;
     case 1:
         earth(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
         break;
     case 2:
         two_perlin_spheres(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                           cmd_opts.image_width, cmd_opts.image_height);
+                           cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
         break;
     case 3:
         quads(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
@@ -50,15 +50,15 @@ int main(int argc, char **argv)
         break;
     case 4:
         simple_light(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                     cmd_opts.image_width, cmd_opts.image_height);
+                     cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
         break;
     case 5:
         cornell_box(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                    cmd_opts.image_width, cmd_opts.image_height, cmd_opts.cornell_box_rt_trans, cmd_opts.cornell_box_smoke);
+                    cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed, cmd_opts.cornell_box_rt_trans, cmd_opts.cornell_box_smoke);
         break;
     case 6:
         final_scene_wk2(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
-                        cmd_opts.image_width, cmd_opts.image_height);
+                        cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
         break;
     default:
         exit(1);
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
                 cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
     dim3 threads(cmd_opts.tx, cmd_opts.ty);
-    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, cmd_opts.max_depth, d_camera, d_bvh_nodes);
+    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, cmd_opts.max_depth, cmd_opts.seed, d_camera, d_bvh_nodes);
     checkCudaErrors(cudaGetLastError());
 
     checkCudaErrors(cudaDeviceSynchronize());
