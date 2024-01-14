@@ -12,6 +12,8 @@ struct CommandLineOptions
     int tx;
     int ty;
     int choice;
+    int seed;
+    int max_depth;
 
     // scene inputs
     // week 1 world
