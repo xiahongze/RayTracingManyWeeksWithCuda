@@ -1,4 +1,77 @@
-# RayTracingTheNextWeekCuda
+# RayTracingManyWeeksWithCuda
+
+## Introduction
+
+This work is based on the legendary book [Ray Tracing in One Weekend](https://raytracing.github.io) by Peter Shirley. The original code is written in C++ and I have ported it to CUDA. The code is also heavily inspired by Roger Allen's [CUDA implementation](https://github.com/rogerallen/raytracinginoneweekendincuda). The sole purpose of this project is to learn CUDA and ray tracing and I try to document my learnings in this README as well as my github [blog](https://xiahongze.github.io/).
+
+## Build
+
+### Prerequisites
+
+- CUDA 12.0
+- Ubuntu 20.04
+- make
+
+### Build
+
+```bash
+make
+
+# or
+make DEBUG=true
+```
+
+### Run
+
+```bash
+$ ./main --help
+A simple ray tracer
+Usage:
+  Ray Tracer [OPTION...]
+
+  -o, --output arg            Output file (JPEG) (default: out.jpg)
+  -w, --width arg             Image width (default: 1200)
+  -h, --height arg            Image height (default: 800)
+  -s, --samples arg           Samples per pixel (default: 10)
+      --tx arg                Threads in x direction (default: 6)
+      --ty arg                Threads in y direction (default: 4)
+  -c, --choice arg            choice of scenes:
+                              0. random spheres
+                              1. globe
+                              2. two perlin spheres
+                              3. quads
+                              4. simple light
+                              5. cornell box
+                              6. final scene week2
+                               (default: 0)
+      --seed arg              Random seed (default: 1984)
+      --max-depth arg         max number of bounce (default: 50)
+      --wk1-bounce            Enable bouncing spheres
+      --wk1-bounce-pct arg    Percentage of bouncing spheres (default:
+                              0.33)
+      --wk1-checker           Use checker board ground
+      --wk2-rotate-translate  Whether to rotate and translate the boxes
+      --wk2-smoke             Add smoke to cornell box
+      --help                  Print help
+```
+
+## Examples
+
+### Random spheres
+
+```bash
+./main -c 0 -s 100 -o random-spheres.jpg
+```
+
+![random-spheres](./images/random-spheres.jpg)
+
+### Week 2 final scene
+
+```bash
+./main -c 6 -s 200 --seed 42 --tx 8 --ty 8 --width 800 --height 800 -o wk2-final-scene.jpg
+```
+
+![week2-final-scene](./images/wk2-final-scene.jpg)
 
 ## Some learnings
 
