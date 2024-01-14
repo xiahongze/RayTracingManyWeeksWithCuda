@@ -2,10 +2,6 @@
 
 #include "hitable.h"
 
-#ifndef RAND_SEED
-#define RAND_SEED 42
-#endif
-
 #define RND (curand_uniform(&local_rand_state))
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
@@ -32,4 +28,4 @@ __device__ float degrees_to_radians(float degrees);
 
 #define INIT_RAND_LOCAL()         \
     curandState local_rand_state; \
-    curand_init(RAND_SEED, 0, 0, &local_rand_state);
+    curand_init(rand_seed, 0, 0, &local_rand_state);

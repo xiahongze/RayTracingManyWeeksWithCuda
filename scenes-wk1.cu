@@ -6,7 +6,7 @@
 #include "utils.h"
 
 __global__ void
-create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
+create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, int list_size, int nx, int ny, int rand_seed, bool bounce, float bounce_pct, bool checkered)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
@@ -17,7 +17,7 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
             int idx = 4 + j * 22 + i;
 
             curandState local_rand_state;
-            curand_init(RAND_SEED + idx, 0, 0, &local_rand_state);
+            curand_init(rand_seed + idx, 0, 0, &local_rand_state);
 
             int a = i - 11;
             int b = j - 11;
@@ -78,9 +78,9 @@ create_random_spheres(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
     d_camera->initialize();
 }
 
-void random_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, bool bounce, float bounce_pct, bool checkered)
+void random_spheres(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool bounce, float bounce_pct, bool checkered)
 {
     INIT_LIST_AND_TREE(22 * 22 + 1 + 3);
 
-    create_random_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, list_size, nx, ny, bounce, bounce_pct, checkered);
+    create_random_spheres<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, list_size, nx, ny, rand_seed, bounce, bounce_pct, checkered);
 }
