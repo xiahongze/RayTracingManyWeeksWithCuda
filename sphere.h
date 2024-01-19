@@ -14,8 +14,8 @@ public:
 
     __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
     __device__ aabb bounding_box() const override;
-    __device__ virtual float pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const override;
-    __device__ virtual vec3 random(const vec3 &o, curandState *local_rand_state) const override;
+    __device__ float pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const override;
+    __device__ vec3 random(const vec3 &o, curandState *local_rand_state) const override;
 
     __device__ vec3 get_center(float time) const;
     __device__ void set_movable(bool movable);

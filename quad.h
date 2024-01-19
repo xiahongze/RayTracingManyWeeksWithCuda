@@ -18,6 +18,10 @@ public:
 
     __device__ bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const override;
 
+    __device__ float pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const override;
+
+    __device__ vec3 random(const vec3 &o, curandState *local_rand_state) const override;
+
     __device__ bool is_interior(float a, float b, hit_record &rec) const;
 
 private:
@@ -28,6 +32,7 @@ private:
     vec3 normal;
     float D;
     vec3 w;
+    float area;
 };
 
 class box : public hitable
