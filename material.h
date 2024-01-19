@@ -25,7 +25,10 @@ public:
         return vec3(0, 0, 0);
     }
 
-    __device__ virtual float scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const = 0;
+    __device__ virtual float scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
+    {
+        return 0;
+    }
 };
 
 class lambertian : public material

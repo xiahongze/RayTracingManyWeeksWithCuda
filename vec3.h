@@ -69,7 +69,7 @@ public:
     __device__ static vec3 random_in_unit_disk(curandState *local_rand_state);
     __device__ static vec3 random_in_unit_sphere(curandState *local_rand_state);
     __device__ static vec3 random_unit_vector(curandState *local_rand_state);
-    __device__ inline vec3 random_cosine_direction(curandState *local_rand_state);
+    __device__ static vec3 random_cosine_direction(curandState *local_rand_state);
 
     __host__ __device__ inline vec3 as_squared() const
     {
@@ -239,7 +239,7 @@ __device__ inline vec3 vec3::random_cosine_direction(curandState *local_rand_sta
     auto r1 = curand_normal(local_rand_state);
     auto r2 = curand_normal(local_rand_state);
 
-    auto phi = 2 * pi * r1;
+    auto phi = 2 * M_PI * r1;
     auto x = cos(phi) * sqrt(r2);
     auto y = sin(phi) * sqrt(r2);
     auto z = sqrt(1 - r2);
