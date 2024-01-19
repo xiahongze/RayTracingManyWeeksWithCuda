@@ -17,7 +17,7 @@ CXXFLAGS = -Wall $(CXXDEBUGFLAG) -MMD -MP
 
 # GENCODE_FLAGS  = -gencode arch=compute_60,code=sm_60
 GENCODE_FLAGS  = 
-NVCCFLAGS      = $(NVDEBUGFLAG) $(GENCODE_FLAGS) -m64 -MMD -MP -rdc=true
+NVCCFLAGS      = $(NVDEBUGFLAG) $(GENCODE_FLAGS) -m64 -MMD -MP -rdc=true --expt-relaxed-constexpr
 
 # Target binary
 TARGET = main

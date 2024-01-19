@@ -2,6 +2,7 @@
 #include "render.h"
 #include "utils.h"
 #include "vec3.h"
+#include <curand_kernel.h>
 
 // Matching the C++ code would recurse enough into color() calls that
 // it was blowing up the stack, so we have to turn this into a
@@ -45,17 +46,23 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, 
         return;
     int pixel_index = j * max_x + i;
 
+    int sqrt_spp = static_cast<int>(sqrt(ns));
+    float recip_sqrt_spp = 1.0 / sqrt_spp;
+
     curandState local_rand_state;
     curand_init(rand_seed + pixel_index, 0, 0, &local_rand_state);
 
     vec3 col(0, 0, 0);
-    for (int s = 0; s < ns; s++)
+    for (int s_j = 0; s_j < sqrt_spp; ++s_j)
     {
-        ray r = d_camera->get_ray(i, j, &local_rand_state);
-        // can call vec3.clamp() here but not here because it help with debugging purpose
-        col += get_ray_color_pixel(max_depth, r, d_bvh_nodes, d_camera->background, &local_rand_state);
+        for (int s_i = 0; s_i < sqrt_spp; ++s_i)
+        {
+            ray r = d_camera->get_ray(i, j, s_i, s_j, sqrt_spp, &local_rand_state);
+            // can call vec3.clamp() here but not here because it help with debugging purpose
+            col += get_ray_color_pixel(max_depth, r, d_bvh_nodes, d_camera->background, &local_rand_state);
+        }
+        col /= float(ns);
+        col.to_gamma_space();
+        d_fb[pixel_index] = col;
     }
-    col /= float(ns);
-    col.to_gamma_space();
-    d_fb[pixel_index] = col;
 }

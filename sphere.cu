@@ -62,7 +62,7 @@ __device__ float sphere::pdf_value(const vec3 &o, const vec3 &v, curandState *lo
         return 0;
 
     auto cos_theta_max = sqrt(1 - radius * radius / (center1 - o).squared_length());
-    auto solid_angle = 2 * pi * (1 - cos_theta_max);
+    auto solid_angle = 2 * M_PI * (1 - cos_theta_max);
 
     return 1 / solid_angle;
 }
@@ -120,7 +120,7 @@ __device__ vec3 sphere::random_to_sphere(float radius, float distance_squared, c
     auto r2 = curand_normal(local_rand_state);
     auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
 
-    auto phi = 2 * pi * r1;
+    auto phi = 2 * M_PI * r1;
     auto x = cos(phi) * sqrt(1 - z * z);
     auto y = sin(phi) * sqrt(1 - z * z);
 

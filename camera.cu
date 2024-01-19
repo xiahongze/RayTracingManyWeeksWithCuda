@@ -35,13 +35,13 @@ __device__ void camera::initialize()
     defocus_disk_v = v * defocus_radius;
 }
 
-__device__ ray camera::get_ray(int i, int j, curandState *local_rand_state) const
+__device__ ray camera::get_ray(int i, int j, int s_i, int s_j, int sqrt_spp, curandState *local_rand_state) const
 {
     // Get a randomly-sampled camera ray for the pixel at location i,j, originating from
     // the camera defocus disk.
 
     auto pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
-    auto pixel_sample = pixel_center + pixel_sample_square(local_rand_state);
+    auto pixel_sample = pixel_center + pixel_sample_square(s_i, s_j, sqrt_spp, local_rand_state);
 
     auto ray_origin = (defocus_angle <= 0.0) ? center : defocus_disk_sample(local_rand_state);
     auto ray_direction = pixel_sample - ray_origin;
@@ -50,7 +50,7 @@ __device__ ray camera::get_ray(int i, int j, curandState *local_rand_state) cons
     return ray(ray_origin, ray_direction, ray_time);
 }
 
-__device__ vec3 camera::pixel_sample_square(curandState *local_rand_state) const
+__device__ vec3 camera::pixel_sample_square(int s_i, int s_j, int sqrt_spp, curandState *local_rand_state) const
 {
     // Returns a random point in the square surrounding a pixel at the origin.
     auto px = -0.5 + curand_uniform(local_rand_state);

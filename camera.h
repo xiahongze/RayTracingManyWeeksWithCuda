@@ -34,9 +34,9 @@ public:
 
     __device__ void initialize();
 
-    __device__ ray get_ray(int i, int j, curandState *local_rand_state) const;
+    __device__ ray get_ray(int i, int j, int s_i, int s_j, int sqrt_spp, curandState *local_rand_state) const;
 
-    __device__ vec3 pixel_sample_square(curandState *local_rand_state) const;
+    __device__ vec3 pixel_sample_square(int s_i, int s_j, int sqrt_spp, curandState *local_rand_state) const;
 
     __device__ vec3 pixel_sample_disk(float radius, curandState *local_rand_state) const;
 
