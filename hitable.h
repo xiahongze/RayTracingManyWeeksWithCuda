@@ -9,10 +9,10 @@ class material;
 struct hit_record
 {
 public:
-    float t;
     vec3 p;
     vec3 normal;
     material *mat_ptr;
+    float t;
     float u;
     float v;
     bool front_face;
@@ -26,6 +26,16 @@ public:
     __device__ virtual bool hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const = 0;
 
     __device__ virtual aabb bounding_box() const = 0;
+
+    __device__ virtual float pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const
+    {
+        return 0.0;
+    }
+
+    __device__ virtual vec3 random(const vec3 &o, curandState *local_rand_state) const
+    {
+        return vec3(1, 0, 0);
+    }
 };
 
 class translate : public hitable
