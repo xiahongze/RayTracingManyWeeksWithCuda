@@ -53,6 +53,12 @@ __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, vec3
     return true;
 }
 
+__device__ float lambertian::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
+{
+    auto cos_theta = dot(rec.normal, unit_vector(scattered.direction()));
+    return cos_theta < 0 ? 0 : cos_theta / M_PI;
+}
+
 // metal
 __device__ metal::metal(const vec3 &a, float f) : albedo(a.clamp()), fuzz(f < 1 ? f : 1) {}
 
@@ -103,6 +109,11 @@ __device__ bool diffuse_light::scatter(const ray &r_in, const hit_record &rec, v
 __device__ vec3 diffuse_light::emitted(float u, float v, const vec3 &p) const
 {
     return emit->value(u, v, p);
+}
+
+__device__ float diffuse_light::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
+{
+    return 1 / (4 * M_PI);
 }
 
 __device__ isotropic::~isotropic()
