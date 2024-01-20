@@ -40,7 +40,7 @@ __device__ lambertian::~lambertian()
     delete albedo;
 }
 
-__device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, const scatter_record &srec, curandState *local_rand_state) const
+__device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
     srec.pdf_ptr = new cosine_pdf(rec.normal);
@@ -58,7 +58,7 @@ __device__ float lambertian::scattering_pdf(const ray &r_in, const hit_record &r
 // metal
 __device__ metal::metal(const vec3 &a, float f) : albedo(a.clamp()), fuzz(f < 1 ? f : 1) {}
 
-__device__ bool metal::scatter(const ray &r_in, const hit_record &rec, const scatter_record &srec, curandState *local_rand_state) const
+__device__ bool metal::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = albedo;
     srec.pdf_ptr = nullptr;
@@ -72,7 +72,7 @@ __device__ bool metal::scatter(const ray &r_in, const hit_record &rec, const sca
 // dielectric
 __device__ dielectric::dielectric(float ri) : ref_idx(ri) {}
 
-__device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, const scatter_record &srec, curandState *local_rand_state) const
+__device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = vec3(1.0, 1.0, 1.0);
     srec.pdf_ptr = nullptr;
@@ -102,12 +102,12 @@ __device__ diffuse_light::~diffuse_light()
     delete emit;
 }
 
-__device__ bool diffuse_light::scatter(const ray &r_in, const hit_record &rec, const scatter_record &srec, curandState *local_rand_state) const
+__device__ bool diffuse_light::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     return false;
 }
 
-__device__ vec3 diffuse_light::emitted(float u, float v, const vec3 &p) const
+__device__ vec3 diffuse_light::emitted(const ray &r_in, const hit_record &rec, float u, float v, const vec3 &p) const
 {
     if (!rec.front_face)
         return vec3(0, 0, 0);
@@ -124,7 +124,7 @@ __device__ isotropic::~isotropic()
     delete albedo;
 }
 
-__device__ bool isotropic::scatter(const ray &r_in, const hit_record &rec, const scatter_record &srec, curandState *local_rand_state) const
+__device__ bool isotropic::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
     srec.pdf_ptr = new sphere_pdf();
