@@ -39,15 +39,15 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
             continue;
         }
 
-        // do sample
-        auto p = srec.pdf_ptr;
-        ray scattered = ray(rec.p, p->generate(local_rand_state), r.get_time());
-        auto pdf_val = p->value(scattered.direction(), local_rand_state);
+        // // do sample
+        // auto p = srec.pdf_ptr;
+        // ray scattered = ray(rec.p, p->generate(local_rand_state), r.get_time());
+        // auto pdf_val = p->value(scattered.direction(), local_rand_state);
 
-        float scattering_pdf = rec.mat_ptr->scattering_pdf(r, rec, scattered);
+        // float scattering_pdf = rec.mat_ptr->scattering_pdf(r, rec, scattered);
 
-        cur_ray = scattered;
-        cur_attenuation *= srec.attenuation * scattering_pdf / pdf_val;
+        // cur_ray = scattered;
+        // cur_attenuation *= srec.attenuation * scattering_pdf / pdf_val;
     }
     return final_color; // exceeded recursion
 }
@@ -75,8 +75,8 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, 
             // can call vec3.clamp() here but not here because it help with debugging purpose
             col += get_ray_color_pixel(max_depth, r, d_bvh_nodes, d_camera->background, &local_rand_state);
         }
-        col /= float(ns);
-        col.to_gamma_space();
-        d_fb[pixel_index] = col;
     }
+    col /= float(ns);
+    col.to_gamma_space();
+    d_fb[pixel_index] = col;
 }
