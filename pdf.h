@@ -6,8 +6,6 @@
 class pdf
 {
 public:
-  // virtual ~pdf() {}
-
   __device__ virtual float value(const vec3 &direction, curandState *local_rand_state) const = 0;
   __device__ virtual vec3 generate(curandState *local_rand_state) const = 0;
 };
@@ -87,7 +85,7 @@ public:
 
   __device__ vec3 generate(curandState *local_rand_state) const override
   {
-    if (curand_normal(local_rand_state) < 0.5)
+    if (curand_uniform(local_rand_state) < 0.5)
       return p[0]->generate(local_rand_state);
     else
       return p[1]->generate(local_rand_state);

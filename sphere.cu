@@ -43,10 +43,10 @@ __device__ bool sphere::hit(const ray &r, const interval &ray_t, hit_record &rec
 
     rec.t = root;
     rec.p = r.point_at_parameter(rec.t);
-    rec.normal = (rec.p - center) / radius;
-    rec.set_face_normal(r, rec.normal);
+    vec3 outward_normal = (rec.p - center) / radius;
+    rec.set_face_normal(r, outward_normal);
+    get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat_ptr = mat_ptr;
-    get_sphere_uv(rec.normal, rec.u, rec.v);
 
     return true;
 }
@@ -116,8 +116,8 @@ __device__ void sphere::get_sphere_uv(const vec3 &p, float &u, float &v)
 
 __device__ vec3 sphere::random_to_sphere(float radius, float distance_squared, curandState *local_rand_state)
 {
-    auto r1 = curand_normal(local_rand_state);
-    auto r2 = curand_normal(local_rand_state);
+    auto r1 = curand_uniform(local_rand_state);
+    auto r2 = curand_uniform(local_rand_state);
     auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
 
     auto phi = 2 * M_PI * r1;

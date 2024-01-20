@@ -77,7 +77,7 @@ __device__ float quad::pdf_value(const vec3 &origin, const vec3 &v, curandState 
 
 __device__ vec3 quad::random(const vec3 &origin, curandState *local_rand_state) const
 {
-    auto p = Q + (curand_normal(local_rand_state) * u) + (curand_normal(local_rand_state) * v);
+    auto p = Q + (curand_uniform(local_rand_state) * u) + (curand_uniform(local_rand_state) * v);
     return p - origin;
 }
 
