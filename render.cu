@@ -24,15 +24,30 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
 
         scatter_record srec;
 
+        vec3 color_from_emission = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
+
         if (!rec.mat_ptr->scatter(cur_ray, rec, srec, local_rand_state))
         {
-            vec3 color_from_emission = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
             final_color += color_from_emission * cur_attenuation;
             break;
         }
 
-        cur_ray = srec.skip_pdf_ray;
-        cur_attenuation *= srec.attenuation;
+        if (srec.skip_pdf)
+        {
+            cur_attenuation *= srec.attenuation;
+            cur_ray = srec.skip_pdf_ray;
+            continue;
+        }
+
+        // do sample
+        auto p = srec.pdf_ptr;
+        ray scattered = ray(rec.p, p->generate(local_rand_state), r.get_time());
+        auto pdf_val = p->value(scattered.direction(), local_rand_state);
+
+        float scattering_pdf = rec.mat_ptr->scattering_pdf(r, rec, scattered);
+
+        cur_ray = scattered;
+        cur_attenuation *= srec.attenuation * scattering_pdf / pdf_val;
     }
     return final_color; // exceeded recursion
 }
@@ -56,7 +71,7 @@ __global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, 
     {
         for (int s_i = 0; s_i < sqrt_spp; ++s_i)
         {
-            ray r = d_camera->get_ray(i, j, s_i, s_j, sqrt_spp, &local_rand_state);
+            ray r = d_camera->get_ray(i, j, s_i, s_j, recip_sqrt_spp, &local_rand_state);
             // can call vec3.clamp() here but not here because it help with debugging purpose
             col += get_ray_color_pixel(max_depth, r, d_bvh_nodes, d_camera->background, &local_rand_state);
         }
