@@ -42,10 +42,23 @@ __device__ lambertian::~lambertian()
 
 __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
-    srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-    srec.pdf_ptr = new cosine_pdf(rec.normal);
-    srec.skip_pdf = false;
+    // srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+    // srec.pdf_ptr = new cosine_pdf(rec.normal); // this is a cause of slowness
+    // srec.skip_pdf = false;
 
+    // return true;
+
+    /**
+     * The following code is much faster than the above code, although not the same
+     */
+    vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
+    srec.skip_pdf = true;
+    // Catch degenerate scatter direction
+    if (scatter_direction.near_zero())
+        scatter_direction = rec.normal;
+
+    srec.skip_pdf_ray = ray(rec.p, scatter_direction, r_in.get_time());
+    srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
     return true;
 }
 
