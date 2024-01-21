@@ -4,7 +4,7 @@
 #include "sphere.h"
 #include "utils.h"
 
-__global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list *d_lights, camera *d_camera,
+__global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list **d_lights, camera *d_camera,
                                        int list_size, int nx, int ny, int rand_seed)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
@@ -32,11 +32,11 @@ __global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, 
     auto glass = new dielectric(1.5);
     d_list[7] = new sphere(vec3(190, 90, 190), 90, glass);
 
-    // // Light Sources
-    // hitable **lights = new hitable *[2];
-    // lights[0] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), nullptr);
-    // lights[1] = new sphere(vec3(190, 90, 190), 90, nullptr);
-    // *d_lights = hitable_list(lights, 2);
+    // Light Sources
+    hitable **lights = new hitable *[2];
+    lights[0] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), nullptr);
+    lights[1] = new sphere(vec3(190, 90, 190), 90, nullptr);
+    *d_lights = new hitable_list(lights, 2);
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -53,7 +53,7 @@ __global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_camera->initialize();
 }
 
-void final_scene_wk3(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list *&d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
+void final_scene_wk3(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list **d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
 {
     INIT_LIST_AND_TREE(8);
 

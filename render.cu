@@ -8,7 +8,7 @@
 // it was blowing up the stack, so we have to turn this into a
 // limited-depth loop instead.  Later code in the book limits to a max
 // depth of 50, so we adapt this a few chapters early on the GPU.
-__device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node *d_bvh_nodes, hitable_list *d_lights, vec3 &backgroound, curandState *local_rand_state)
+__device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node *d_bvh_nodes, hitable_list **d_lights, vec3 &backgroound, curandState *local_rand_state)
 {
     ray cur_ray = r;
     vec3 cur_attenuation = vec3(1.0, 1.0, 1.0);
@@ -58,12 +58,12 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
         }
 
         pdf *p;
-        hitable_pdf pdf_light = hitable_pdf(d_lights, rec.p);
-        mixture_pdf p_light(&pdf_light, p_cur);
+        hitable_pdf pdf_light(*d_lights, rec.p);
+        mixture_pdf p_mixed(p_cur, &pdf_light);
 
-        if (d_lights->length() > 0) // if there is light
+        if (*d_lights != nullptr && (*d_lights)->length() > 0) // if there is light
         {
-            p = &p_light;
+            p = &p_mixed;
         }
         else
         {
@@ -81,7 +81,7 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
     return final_color; // exceeded recursion
 }
 
-__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, int rand_seed, camera *d_camera, bvh_node *d_bvh_nodes, hitable_list *d_lights)
+__global__ void render(vec3 *d_fb, int max_x, int max_y, int ns, int max_depth, int rand_seed, camera *d_camera, bvh_node *d_bvh_nodes, hitable_list **d_lights)
 {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;

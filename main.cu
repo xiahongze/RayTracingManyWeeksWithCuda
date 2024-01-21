@@ -30,8 +30,8 @@ int main(int argc, char **argv)
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
 
-    hitable_list *d_lights;
-    checkCudaErrors(cudaMalloc((void **)&d_lights, sizeof(hitable_list)));
+    hitable_list **d_lights;
+    checkCudaErrors(cudaMalloc((void **)&d_lights, sizeof(hitable_list *)));
 
     switch (cmd_opts.choice)
     {
