@@ -173,5 +173,7 @@ __device__ float hitable_list::pdf_value(const vec3 &o, const vec3 &v, curandSta
 __device__ vec3 hitable_list::random(const vec3 &o, curandState *local_rand_state) const
 {
     int index = int(curand_uniform(local_rand_state) * list_size);
+    if (index == list_size)
+        index = list_size - 1;
     return list[index]->random(o, local_rand_state);
 }
