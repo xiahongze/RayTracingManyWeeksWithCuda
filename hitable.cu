@@ -128,6 +128,11 @@ __device__ hitable_list::~hitable_list()
     delete[] list;
 }
 
+__device__ int hitable_list::length()
+{
+    return list_size;
+}
+
 __device__ bool hitable_list::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
 {
     hit_record temp_rec;
