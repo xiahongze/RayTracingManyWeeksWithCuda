@@ -48,19 +48,6 @@ __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, scat
     srec.skip_pdf = false;
 
     return true;
-
-    /**
-     * The following code is much faster than the above code, although not the same
-     */
-    // vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
-    // srec.skip_pdf = true;
-    // // Catch degenerate scatter direction
-    // if (scatter_direction.near_zero())
-    //     scatter_direction = rec.normal;
-
-    // srec.skip_pdf_ray = ray(rec.p, scatter_direction, r_in.get_time());
-    // srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-    // return true;
 }
 
 __device__ float lambertian::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
