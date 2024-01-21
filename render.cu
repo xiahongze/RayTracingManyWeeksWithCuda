@@ -76,7 +76,11 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
         float scattering_pdf = rec.mat_ptr->scattering_pdf(r, rec, scattered);
 
         cur_ray = scattered;
-        cur_attenuation *= srec.attenuation * scattering_pdf / pdf_val;
+        if (pdf_val > 1e-6)
+        {
+            // avoid divide by zero
+            cur_attenuation *= srec.attenuation * scattering_pdf / pdf_val;
+        }
     }
     return final_color; // exceeded recursion
 }
