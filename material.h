@@ -79,8 +79,6 @@ public:
 
     __device__ vec3 emitted(const ray &r_in, const hit_record &rec, float u, float v, const vec3 &p) const override;
 
-    __device__ float scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const override;
-
 private:
     rtapp::texture *emit;
 };
@@ -93,6 +91,8 @@ public:
     __device__ ~isotropic();
 
     __device__ bool scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const override;
+
+    __device__ float scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const override;
 
 private:
     rtapp::texture *albedo;

@@ -126,11 +126,6 @@ __device__ vec3 diffuse_light::emitted(const ray &r_in, const hit_record &rec, f
     return emit->value(u, v, p);
 }
 
-__device__ float diffuse_light::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
-{
-    return 1 / (4 * M_PI);
-}
-
 __device__ isotropic::~isotropic()
 {
     delete albedo;
@@ -143,4 +138,9 @@ __device__ bool isotropic::scatter(const ray &r_in, const hit_record &rec, scatt
     srec.sphere_pdf_ = sphere_pdf();
     srec.skip_pdf = false;
     return true;
+}
+
+__device__ float isotropic::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
+{
+    return 1 / (4 * M_PI);
 }
