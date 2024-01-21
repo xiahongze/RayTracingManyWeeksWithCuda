@@ -9,18 +9,15 @@
 struct scatter_record
 {
 public:
-    __device__ ~scatter_record()
-    {
-        if (pdf_ptr)
-        {
-            delete pdf_ptr;
-        }
-    }
-
     vec3 attenuation;
-    pdf *pdf_ptr;
     bool skip_pdf;
     ray skip_pdf_ray;
+
+    pdf_type pdf_type_;
+    cosine_pdf cosine_pdf_;
+    hitable_pdf hitable_pdf_;
+    mixture_pdf mixture_pdf_;
+    sphere_pdf sphere_pdf_;
 };
 
 class material

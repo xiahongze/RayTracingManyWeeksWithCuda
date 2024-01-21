@@ -42,24 +42,25 @@ __device__ lambertian::~lambertian()
 
 __device__ bool lambertian::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
-    // srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-    // srec.pdf_ptr = new cosine_pdf(rec.normal); // this is a cause of slowness
-    // srec.skip_pdf = false;
+    srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+    srec.pdf_type_ = pdf_type::COSINE;
+    srec.cosine_pdf_ = cosine_pdf(rec.normal);
+    srec.skip_pdf = false;
 
-    // return true;
+    return true;
 
     /**
      * The following code is much faster than the above code, although not the same
      */
-    vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
-    srec.skip_pdf = true;
-    // Catch degenerate scatter direction
-    if (scatter_direction.near_zero())
-        scatter_direction = rec.normal;
+    // vec3 scatter_direction = rec.normal + vec3::random_in_unit_sphere(local_rand_state);
+    // srec.skip_pdf = true;
+    // // Catch degenerate scatter direction
+    // if (scatter_direction.near_zero())
+    //     scatter_direction = rec.normal;
 
-    srec.skip_pdf_ray = ray(rec.p, scatter_direction, r_in.get_time());
-    srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-    return true;
+    // srec.skip_pdf_ray = ray(rec.p, scatter_direction, r_in.get_time());
+    // srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
+    // return true;
 }
 
 __device__ float lambertian::scattering_pdf(const ray &r_in, const hit_record &rec, const ray &scattered) const
@@ -74,7 +75,6 @@ __device__ metal::metal(const vec3 &a, float f) : albedo(a.clamp()), fuzz(f < 1 
 __device__ bool metal::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = albedo;
-    srec.pdf_ptr = nullptr;
     srec.skip_pdf = true;
     vec3 reflected = reflect(unit_vector(r_in.direction()), rec.normal);
     srec.skip_pdf_ray =
@@ -88,7 +88,6 @@ __device__ dielectric::dielectric(float ri) : ref_idx(ri) {}
 __device__ bool dielectric::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = vec3(1.0, 1.0, 1.0);
-    srec.pdf_ptr = nullptr;
     srec.skip_pdf = true;
     float refraction_ratio = rec.front_face ? (1.0 / ref_idx) : ref_idx;
 
@@ -140,7 +139,8 @@ __device__ isotropic::~isotropic()
 __device__ bool isotropic::scatter(const ray &r_in, const hit_record &rec, scatter_record &srec, curandState *local_rand_state) const
 {
     srec.attenuation = albedo->value(rec.u, rec.v, rec.p);
-    srec.pdf_ptr = new sphere_pdf();
+    srec.pdf_type_ = pdf_type::SPHERE;
+    srec.sphere_pdf_ = sphere_pdf();
     srec.skip_pdf = false;
     return true;
 }
