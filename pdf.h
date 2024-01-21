@@ -3,6 +3,14 @@
 #include "hitable.h"
 #include "onb.h"
 
+enum pdf_type
+{
+  COSINE,
+  SPHERE,
+  HITABLE,
+  MIXTURE
+};
+
 class pdf
 {
 public:
@@ -13,6 +21,8 @@ public:
 class cosine_pdf : public pdf
 {
 public:
+  __device__ cosine_pdf() {}
+
   __device__ cosine_pdf(const vec3 &w) { uvw.build_from_w(w); }
 
   __device__ float value(const vec3 &direction, curandState *local_rand_state) const override
@@ -49,29 +59,33 @@ public:
 class hitable_pdf : public pdf
 {
 public:
-  __device__ hitable_pdf(const hitable &_objects, const vec3 &_origin)
+  __device__ hitable_pdf() {}
+
+  __device__ hitable_pdf(hitable *_objects, const vec3 &_origin)
       : objects(_objects), origin(_origin)
   {
   }
 
   __device__ float value(const vec3 &direction, curandState *local_rand_state) const override
   {
-    return objects.pdf_value(origin, direction, local_rand_state);
+    return objects->pdf_value(origin, direction, local_rand_state);
   }
 
   __device__ vec3 generate(curandState *local_rand_state) const override
   {
-    return objects.random(origin, local_rand_state);
+    return objects->random(origin, local_rand_state);
   }
 
 private:
-  const hitable &objects;
+  hitable *objects;
   vec3 origin;
 };
 
 class mixture_pdf : public pdf
 {
 public:
+  __device__ mixture_pdf() {}
+
   __device__ mixture_pdf(pdf *p0, pdf *p1)
   {
     p[0] = p0;
