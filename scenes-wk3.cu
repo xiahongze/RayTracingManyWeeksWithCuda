@@ -19,7 +19,7 @@ __global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_list[1] = new quad(vec3(0, 0, 555), vec3(0, 0, -555), vec3(0, 555, 0), red);
     d_list[2] = new quad(vec3(0, 555, 0), vec3(555, 0, 0), vec3(0, 0, 555), white);
     d_list[3] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 0, -555), white);
-    d_list[4] = new quad(vec3(555, 0, 555), vec3(-555, 0, 0), vec3(0, 555, 0), white);
+    d_list[4] = new quad(vec3(555, 0, 555), vec3(-555, 0, 0), vec3(0, 555, 0.1), white);
 
     // Light
     d_list[5] = new quad(vec3(213, 554, 227), vec3(130, 0, 0), vec3(0, 0, 105), light);
@@ -32,11 +32,11 @@ __global__ void create_final_scene_wk3(bvh_node *d_bvh_nodes, hitable **d_list, 
     auto glass = new dielectric(1.5);
     d_list[7] = new sphere(vec3(190, 90, 190), 90, glass);
 
-    // Light Sources
-    hitable **lights = new hitable *[2];
-    lights[0] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), nullptr);
-    lights[1] = new sphere(vec3(190, 90, 190), 90, nullptr);
-    *d_lights = hitable_list(lights, 2);
+    // // Light Sources
+    // hitable **lights = new hitable *[2];
+    // lights[0] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), nullptr);
+    // lights[1] = new sphere(vec3(190, 90, 190), 90, nullptr);
+    // *d_lights = hitable_list(lights, 2);
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
