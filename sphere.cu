@@ -1,3 +1,4 @@
+#include "onb.h"
 #include "sphere.h"
 
 __device__ sphere::sphere() {}
@@ -42,15 +43,38 @@ __device__ bool sphere::hit(const ray &r, const interval &ray_t, hit_record &rec
 
     rec.t = root;
     rec.p = r.point_at_parameter(rec.t);
-    rec.normal = (rec.p - center) / radius;
-    rec.set_face_normal(r, rec.normal);
+    vec3 outward_normal = (rec.p - center) / radius;
+    rec.set_face_normal(r, outward_normal);
+    get_sphere_uv(outward_normal, rec.u, rec.v);
     rec.mat_ptr = mat_ptr;
-    get_sphere_uv(rec.normal, rec.u, rec.v);
 
     return true;
 }
 
 __device__ aabb sphere::bounding_box() const { return bbox; }
+
+__device__ float sphere::pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const
+{
+    // This method only works for stationary spheres.
+
+    hit_record rec;
+    if (!this->hit(ray(o, v), interval(0.001, FLT_MAX), rec, local_rand_state))
+        return 0;
+
+    auto cos_theta_max = sqrt(1 - radius * radius / (center1 - o).squared_length());
+    auto solid_angle = 2 * M_PI * (1 - cos_theta_max);
+
+    return 1 / solid_angle;
+}
+
+__device__ vec3 sphere::random(const vec3 &o, curandState *local_rand_state) const
+{
+    vec3 direction = center1 - o;
+    auto distance_squared = direction.squared_length();
+    onb uvw;
+    uvw.build_from_w(direction);
+    return uvw.local(random_to_sphere(radius, distance_squared, local_rand_state));
+}
 
 __device__ vec3 sphere::get_center(float time) const
 {
@@ -88,4 +112,17 @@ __device__ void sphere::get_sphere_uv(const vec3 &p, float &u, float &v)
 
     u = phi / (2 * M_PI);
     v = theta / M_PI;
+}
+
+__device__ vec3 sphere::random_to_sphere(float radius, float distance_squared, curandState *local_rand_state)
+{
+    auto r1 = curand_uniform(local_rand_state);
+    auto r2 = curand_uniform(local_rand_state);
+    auto z = 1 + r2 * (sqrt(1 - radius * radius / distance_squared) - 1);
+
+    auto phi = 2 * M_PI * r1;
+    auto x = cos(phi) * sqrt(1 - z * z);
+    auto y = sin(phi) * sqrt(1 - z * z);
+
+    return vec3(x, y, z);
 }

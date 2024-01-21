@@ -9,6 +9,8 @@ __device__ quad::quad(const vec3 &_Q, const vec3 &_u, const vec3 &_v, material *
     D = dot(normal, Q);
     w = n / dot(n, n);
 
+    area = n.length();
+
     set_bounding_box();
 }
 
@@ -59,6 +61,24 @@ __device__ bool quad::is_interior(float a, float b, hit_record &rec) const
     rec.u = a;
     rec.v = b;
     return true;
+}
+
+__device__ float quad::pdf_value(const vec3 &origin, const vec3 &v, curandState *local_rand_state) const
+{
+    hit_record rec;
+    if (!this->hit(ray(origin, v), interval(0.001, FLT_MAX), rec, local_rand_state))
+        return 0;
+
+    auto distance_squared = rec.t * rec.t * v.squared_length();
+    auto cosine = fabs(dot(v, rec.normal) / v.length());
+
+    return distance_squared / (cosine * area);
+}
+
+__device__ vec3 quad::random(const vec3 &origin, curandState *local_rand_state) const
+{
+    auto p = Q + (curand_uniform(local_rand_state) * u) + (curand_uniform(local_rand_state) * v);
+    return p - origin;
 }
 
 __device__ box::box(const vec3 &a, const vec3 &b, material *mat)

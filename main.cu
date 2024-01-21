@@ -30,6 +30,9 @@ int main(int argc, char **argv)
     camera *d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(camera)));
 
+    hitable_list **d_lights;
+    checkCudaErrors(cudaMalloc((void **)&d_lights, sizeof(hitable_list *)));
+
     switch (cmd_opts.choice)
     {
     case 0:
@@ -57,7 +60,11 @@ int main(int argc, char **argv)
                     cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed, cmd_opts.cornell_box_rt_trans, cmd_opts.cornell_box_smoke);
         break;
     case 6:
-        final_scene_wk2(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+        final_scene_wk2(h_bvh_nodes, d_bvh_nodes, d_list, d_lights, d_camera, list_size, tree_size,
+                        cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
+        break;
+    case 7:
+        final_scene_wk3(h_bvh_nodes, d_bvh_nodes, d_list, d_lights, d_camera, list_size, tree_size,
                         cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
         break;
     default:
@@ -81,7 +88,7 @@ int main(int argc, char **argv)
     dim3 blocks(cmd_opts.image_width / cmd_opts.tx + (cmd_opts.image_width % cmd_opts.tx ? 1 : 0),
                 cmd_opts.image_height / cmd_opts.ty + (cmd_opts.image_height % cmd_opts.ty ? 1 : 0));
     dim3 threads(cmd_opts.tx, cmd_opts.ty);
-    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, cmd_opts.max_depth, cmd_opts.seed, d_camera, d_bvh_nodes);
+    render<<<blocks, threads>>>(d_fb, cmd_opts.image_width, cmd_opts.image_height, cmd_opts.samples_per_pixel, cmd_opts.max_depth, cmd_opts.seed, d_camera, d_bvh_nodes, d_lights);
     checkCudaErrors(cudaGetLastError());
 
     checkCudaErrors(cudaDeviceSynchronize());
@@ -98,6 +105,7 @@ int main(int argc, char **argv)
     checkCudaErrors(cudaFree(d_list));
     checkCudaErrors(cudaFree(d_bvh_nodes));
     checkCudaErrors(cudaFree(d_fb));
+    checkCudaErrors(cudaFree(d_lights));
     delete[] h_bvh_nodes;
     delete[] h_fb;
 

@@ -224,7 +224,7 @@ void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_li
                                                    list_size, nx, ny, rand_seed, rotate_translate, smoke);
 }
 
-__global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera, unsigned char *d_pixel_data,
+__global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list **d_lights, camera *d_camera, unsigned char *d_pixel_data,
                                        int width, int height, int channels, int list_size, int nx, int ny, int rand_seed)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
@@ -292,6 +292,12 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
         d_list[z++] = translated_random_sphere;
     }
 
+    // Add light Sources
+    hitable **lights = new hitable *[1];
+    lights[0] = new quad(vec3(123, 554, 147), vec3(300, 0, 0), vec3(0, 0, 265), nullptr);
+    // lights[1] = new sphere(vec3(260, 150, 45), 50, nullptr); // did not find this LS useful
+    *d_lights = new hitable_list(lights, 1);
+
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
 
@@ -307,13 +313,13 @@ __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, 
     d_camera->initialize();
 }
 
-void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
+void final_scene_wk2(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list **d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed)
 {
     LOAD_IMAGE_TEXTURE("assets/earthmap.jpg");
 
     INIT_LIST_AND_TREE(1410);
 
-    create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera, d_pixel_data,
+    create_final_scene_wk2<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_lights, d_camera, d_pixel_data,
                                                        texture.width, texture.height, texture.channels,
                                                        list_size, nx, ny, rand_seed);
 }
