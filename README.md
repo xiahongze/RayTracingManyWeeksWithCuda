@@ -73,6 +73,14 @@ Usage:
 
 ![week2-final-scene](./images/wk2-final-scene.jpg)
 
+### Week 3 final scene
+
+```bash
+./main -s 500 -c 7 -h 600 -w 600 --tx 6 --ty 8 -o wk3-final-scene.jpg
+```
+
+![week3-final-scene](./images/wk3-final-scene.jpg)
+
 ## Some learnings
 
 ### Why keeping `hittable **list` instead of `hittable *list`?
