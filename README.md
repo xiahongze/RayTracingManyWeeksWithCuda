@@ -73,6 +73,16 @@ Usage:
 
 ![week2-final-scene](./images/wk2-final-scene.jpg)
 
+#### Week 2 final scene with light source (wk3)
+
+```bash
+./main -c 6 -s 100 --seed 42 --tx 8 --ty 8 --width 800 --height 800 -o wk2-final-scene-light-source.jpg
+```
+
+![week2-final-scene-light-source](./images/wk2-final-scene-light-source.jpg)
+
+This shows that with fewer sample per pixel, the image actually has fewer noise thanks to the light source and importance sampling.
+
 ### Week 3 final scene
 
 ```bash
