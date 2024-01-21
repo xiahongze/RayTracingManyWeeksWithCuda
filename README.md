@@ -43,6 +43,7 @@ Usage:
                               4. simple light
                               5. cornell box
                               6. final scene week2
+                              7. final scene week3
                                (default: 0)
       --seed arg              Random seed (default: 1984)
       --max-depth arg         max number of bounce (default: 50)
