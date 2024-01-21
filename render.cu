@@ -40,7 +40,22 @@ __device__ vec3 get_ray_color_pixel(const int max_depth, const ray &r, bvh_node 
         }
 
         // do sample
-        auto p = srec.pdf_ptr;
+        pdf *p;
+        switch (srec.pdf_type_)
+        {
+        case pdf_type::COSINE:
+            p = &srec.cosine_pdf_;
+            break;
+        case pdf_type::HITABLE:
+            p = &srec.hitable_pdf_;
+            break;
+        case pdf_type::MIXTURE:
+            p = &srec.mixture_pdf_;
+            break;
+        default:
+            p = &srec.sphere_pdf_;
+            break;
+        }
         ray scattered = ray(rec.p, p->generate(local_rand_state), r.get_time());
         auto pdf_val = p->value(scattered.direction(), local_rand_state);
 
