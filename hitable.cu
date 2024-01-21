@@ -110,3 +110,63 @@ __device__ bool rotate_y::hit(const ray &r, const interval &ray_t, hit_record &r
 
     return true;
 }
+
+__device__ hitable_list::hitable_list(hitable **l, int n) : list(l), list_size(n)
+{
+    for (int i = 0; i < n; ++i)
+    {
+        bbox = aabb(bbox, list[i]->bounding_box());
+    }
+}
+
+__device__ hitable_list::~hitable_list()
+{
+    for (int i = 0; i < list_size; ++i)
+    {
+        delete list[i];
+    }
+    delete[] list;
+}
+
+__device__ bool hitable_list::hit(const ray &r, const interval &ray_t, hit_record &rec, curandState *local_rand_state) const
+{
+    hit_record temp_rec;
+    bool hit_anything = false;
+    auto closest_so_far = ray_t.max;
+
+    for (int i = 0; i < list_size; ++i)
+    {
+        if (list[i]->hit(r, interval(ray_t.min, closest_so_far), temp_rec, local_rand_state))
+        {
+            hit_anything = true;
+            closest_so_far = temp_rec.t;
+            rec = temp_rec;
+        }
+    }
+
+    return hit_anything;
+}
+
+__device__ aabb hitable_list::bounding_box() const
+{
+    return bbox;
+}
+
+__device__ float hitable_list::pdf_value(const vec3 &o, const vec3 &v, curandState *local_rand_state) const
+{
+    auto weight = 1.0f / list_size;
+    auto sum = 0.0f;
+
+    for (int i = 0; i < list_size; i++)
+    {
+        sum += weight * list[i]->pdf_value(o, v, local_rand_state);
+    }
+
+    return sum;
+}
+
+__device__ vec3 hitable_list::random(const vec3 &o, curandState *local_rand_state) const
+{
+    int index = int(curand_uniform(local_rand_state) * list_size);
+    return list[index]->random(o, local_rand_state);
+}
