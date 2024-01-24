@@ -163,7 +163,7 @@ void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_l
                                                     list_size, nx, ny, rand_seed);
 }
 
-__global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, camera *d_camera,
+__global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list **d_lights, camera *d_camera,
                                    int list_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
@@ -174,6 +174,7 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     auto white = new lambertian(vec3(0.73, 0.73, 0.73));
     auto green = new lambertian(vec3(0.12, 0.45, 0.15));
     auto light = new diffuse_light(vec3(15, 15, 15));
+    auto aluminum = new metal(vec3(0.8, 0.85, 0.88), 0.0);
 
     d_list[0] = new quad(vec3(555, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), green);
     d_list[1] = new quad(vec3(0, 0, 0), vec3(0, 555, 0), vec3(0, 0, 555), red);
@@ -182,16 +183,18 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_list[4] = new quad(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white);
     d_list[5] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0.1), white);
 
+    auto box1_mat = true ? (material *)aluminum : (material *)white;
+
     if (rotate_translate)
     {
-        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), white);
+        auto box1 = new box(vec3(0, 0, 0), vec3(165, 330, 165), box1_mat);
         auto box2 = new box(vec3(0, 0, 0), vec3(165, 165, 165), white);
         d_list[6] = new translate(new rotate_y(box1, 15), vec3(265, 0, 295));
         d_list[7] = new translate(new rotate_y(box2, -18), vec3(130, 0, 65));
     }
     else
     {
-        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+        d_list[6] = new box(vec3(130, 0, 65), vec3(295, 165, 230), box1_mat);
         d_list[7] = new box(vec3(265, 0, 295), vec3(431, 331, 461), white);
     }
 
@@ -200,6 +203,11 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
         d_list[6] = new constant_medium(d_list[6], 0.01, vec3(0, 0, 0));
         d_list[7] = new constant_medium(d_list[7], 0.01, vec3(1, 1, 1));
     }
+
+    // add light sources
+    hitable **lights = new hitable *[1];
+    lights[0] = new quad(vec3(343, 554, 332), vec3(-130, 0, 0), vec3(0, 0, -105), nullptr);
+    *d_lights = new hitable_list(lights, 1);
 
     // create bvh_nodes
     bvh_node::prefill_nodes(d_bvh_nodes, d_list, list_size);
@@ -216,11 +224,11 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, came
     d_camera->initialize();
 }
 
-void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
+void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list **d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
 {
     INIT_LIST_AND_TREE(8);
 
-    create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_camera,
+    create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_lights, d_camera,
                                                    list_size, nx, ny, rand_seed, rotate_translate, smoke);
 }
 

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
                      cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed);
         break;
     case 5:
-        cornell_box(h_bvh_nodes, d_bvh_nodes, d_list, d_camera, list_size, tree_size,
+        cornell_box(h_bvh_nodes, d_bvh_nodes, d_list, d_lights, d_camera, list_size, tree_size,
                     cmd_opts.image_width, cmd_opts.image_height, cmd_opts.seed, cmd_opts.cornell_box_rt_trans, cmd_opts.cornell_box_smoke);
         break;
     case 6:
