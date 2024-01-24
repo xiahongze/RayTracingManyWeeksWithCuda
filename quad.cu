@@ -87,9 +87,11 @@ __device__ box::box(const vec3 &a, const vec3 &b, material *mat)
     auto min = vec3(fmin(a.x(), b.x()), fmin(a.y(), b.y()), fmin(a.z(), b.z()));
     auto max = vec3(fmax(a.x(), b.x()), fmax(a.y(), b.y()), fmax(a.z(), b.z()));
 
-    auto dx = vec3(max.x() - min.x(), 0, 0);
-    auto dy = vec3(0, max.y() - min.y(), 0);
-    auto dz = vec3(0, 0, max.z() - min.z());
+    // need to perturb the box a little bit to avoid degenerate quads
+    // if not, you may see black side if camera is facing the box perpendicularly
+    auto dx = vec3(max.x() - min.x(), 0.1, 0);
+    auto dy = vec3(0, max.y() - min.y(), 0.1);
+    auto dz = vec3(0.1, 0, max.z() - min.z());
 
     sides[0] = quad(vec3(min.x(), min.y(), max.z()), dx, dy, mat);  // front
     sides[1] = quad(vec3(max.x(), min.y(), max.z()), -dz, dy, mat); // right
