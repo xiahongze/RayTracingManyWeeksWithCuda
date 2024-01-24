@@ -92,6 +92,14 @@ This shows that with fewer sample per pixel, the image actually has fewer noise 
 
 ![week3-final-scene](./images/wk3-final-scene.jpg)
 
+### Week 2 Cornell box with mirror
+
+```bash
+./main -c 5 -s 500 --wk2-rotate-translate --wk2-mirror -h 600 -w 600 --tx 6 --ty 6
+```
+
+![week2-cornell-box-mirror](./images/wk2-cornell-box-mirror.jpg)
+
 ## Some learnings
 
 ### Why keeping `hittable **list` instead of `hittable *list`?

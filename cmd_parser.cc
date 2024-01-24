@@ -25,6 +25,7 @@ CommandLineOptions parse_command_line(int argc, char **argv)
         ("wk1-checker", "Use checker board ground", cxxopts::value<bool>(options.checkered)->default_value("false"))                                      //
         ("wk2-rotate-translate", "Whether to rotate and translate the boxes", cxxopts::value<bool>(options.cornell_box_rt_trans)->default_value("false")) //
         ("wk2-smoke", "Add smoke to cornell box", cxxopts::value<bool>(options.cornell_box_smoke)->default_value("false"))                                //
+        ("wk2-mirror", "Make cornell box a mirror", cxxopts::value<bool>(options.cornell_box_mirror)->default_value("false"))                             //
         ("help", "Print help");
 
     try
