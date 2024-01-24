@@ -164,7 +164,7 @@ void simple_light(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_l
 }
 
 __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list **d_lights, camera *d_camera,
-                                   int list_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
+                                   int list_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke, bool mirror)
 {
     CHECK_SINGLE_THREAD_BOUNDS();
 
@@ -183,7 +183,7 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, hita
     d_list[4] = new quad(vec3(555, 555, 555), vec3(-555, 0, 0), vec3(0, 0, -555), white);
     d_list[5] = new quad(vec3(0, 0, 555), vec3(555, 0, 0), vec3(0, 555, 0.1), white);
 
-    auto box1_mat = true ? (material *)aluminum : (material *)white;
+    auto box1_mat = mirror ? (material *)aluminum : (material *)white;
 
     if (rotate_translate)
     {
@@ -224,12 +224,12 @@ __global__ void create_cornell_box(bvh_node *d_bvh_nodes, hitable **d_list, hita
     d_camera->initialize();
 }
 
-void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list **d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke)
+void cornell_box(bvh_node *&h_bvh_nodes, bvh_node *&d_bvh_nodes, hitable **&d_list, hitable_list **d_lights, camera *&d_camera, int &list_size, int &tree_size, int nx, int ny, int rand_seed, bool rotate_translate, bool smoke, bool mirror)
 {
     INIT_LIST_AND_TREE(8);
 
     create_cornell_box<<<dim3(1, 1), dim3(1, 1)>>>(d_bvh_nodes, d_list, d_lights, d_camera,
-                                                   list_size, nx, ny, rand_seed, rotate_translate, smoke);
+                                                   list_size, nx, ny, rand_seed, rotate_translate, smoke, mirror);
 }
 
 __global__ void create_final_scene_wk2(bvh_node *d_bvh_nodes, hitable **d_list, hitable_list **d_lights, camera *d_camera, unsigned char *d_pixel_data,
